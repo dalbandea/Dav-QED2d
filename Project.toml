@@ -1,0 +1,7 @@
+name = "QED2d"
+uuid = "364e4154-2cc7-478a-8999-1e1f5087704f"
+authors = ["Alberto Ramos <alberto.ramos@ific.uv.es>"]
+version = "0.1.0"
+
+[deps]
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"

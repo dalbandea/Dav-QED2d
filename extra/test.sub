@@ -1,0 +1,12 @@
+universe = vanilla
+
+executable              = test_master.sh
+arguments               = $(Process)
+
+log                     = test.log
+output                  = outfile.$(Cluster).$(Process).out
+error                   = errors.$(Cluster).$(Process).err
+
+request_gpus = 1
+
+queue
