@@ -1,0 +1,19 @@
+{
+    "Run": {
+	"user": "alberto",
+	"host": "artemisa",
+	"name": "test_run", 
+	"seed": 1234
+    },
+    "Lattice": {
+	"size": [128, 128],
+	"beta": 11.25
+    },
+    "HMC": {
+	"ns": 10,
+	"eps": 0.15,
+        "nthm":  2000,
+        "ntraj": 2000,
+	"Qzero": false
+    }
+}
