@@ -1,5 +1,8 @@
 
-function HMC!(U, eps, ns, prm::LattParm, kprm::KernelParm)
+function HMC!(U, eps, ns, acc, prm::LattParm, kprm::KernelParm; qzero = false)
+
+    Ucp = similar(U)
+    Ucp .= U
     
     mom = CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)
     hini = Hamiltonian(mom, U, prm, kprm)
@@ -7,8 +10,34 @@ function HMC!(U, eps, ns, prm::LattParm, kprm::KernelParm)
     OMF4!(mom, U, eps, ns, prm::LattParm, kprm::KernelParm)
     
     hfin = Hamiltonian(mom, U, prm, kprm)
-    @info("    Energy [inital]: $hini [final]: $hfin [difference]: $(hfin-hini)")
+    if qzero
+        if abs(Qtop(U, prm, kprm)) > 0.1
+            pacc = 0.0
+        else
+            pacc = exp(-(hfin-hini))
+        end
+    else
+        pacc = exp(-(hfin-hini))
+    end
+    
+    if (pacc < 1.0)
+        r = rand()
+        if (pacc > r) 
+            push!(acc, 1)
+        else
+            U .= Ucp
+            push!(acc, 0)
+        end
+    else
+        push!(acc, 1)
+    end
 
+    if (acc[end] == 0)
+        @info("    REJECT: Energy [inital: $hini; final: $hfin; difference: $(hfin-hini)]; Pacc = $(count(acc.==1)/length(acc))")
+    else
+        @info("    ACCEPT:  Energy [inital: $hini; final: $hfin; difference: $(hfin-hini)]; Pacc = $(count(acc.==1)/length(acc))")
+    end
+    
     return nothing
 end
 

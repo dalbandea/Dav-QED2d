@@ -20,6 +20,6 @@ include("QED2dHMC.jl")
 export HMC!, Hamiltonian, Action, Plaquette, Qtop, OMF4!
 
 include("QED2dFields.jl")
-export unfold_fld!
+export unfold_fld!, unfold_reflect!
 
 end # module

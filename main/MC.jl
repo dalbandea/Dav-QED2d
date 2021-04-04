@@ -63,7 +63,6 @@ function read_options(fname)
 
     BDIO_set_user(s["Run"]["user"])
     BDIO_set_host(s["Run"]["host"])
-    nmsm = s["Run"]["measurements"]
     
     io = open(s["Run"]["name"]*".log", "w+")
     global_logger(TerminalLogger(io))
@@ -73,6 +72,7 @@ function read_options(fname)
 
     eps   = s["HMC"]["eps"]
     ns    = s["HMC"]["ns"]
+    nthm  = s["HMC"]["nthm"]
     nt    = s["HMC"]["ntraj"]
     qzero = s["HMC"]["Qzero"]
     
@@ -95,88 +95,58 @@ function read_options(fname)
     dfoo[1] = lsize[1]
     dfoo[2] = lsize[2]
     dfoo[3] = bt
-    dfoo[4] = nmsm
+    dfoo[4] = nt
     BDIO_write!(fb, dfoo)
     BDIO_write_hash!(fb)
     
-    return eps, ns, nt, lsize, bt, nmsm, qzero, fb
-end
-
-function save_msm(fb, U, prm, kprm)
-    acum = CUDA.CuArray{Float64}(undef, prm.iL[1], prm.iL[2])
-    CUDA.@sync begin
-        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks plaquette!(acum, U, prm)
-    end
-    
-    dfoo = Array(acum)
-    BDIO_start_record!(fb, BDIO_BIN_F64LE, 3, true)
-    for i in 1:prm.iL[1]
-        BDIO_write!(fb, dfoo[i,:])
-    end
-    BDIO_write_hash!(fb)
-    pavg, perr = err_avg(dfoo)
-    @info(" MEASUREMENT $i of $nmsm")
-    @info("   Plaquette and error: $pavg +/- $perr")
-    
-    CUDA.@sync begin
-        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks qtop!(acum, U, prm)
-    end
-    
-    dfoo = Array(acum)
-    BDIO_start_record!(fb, BDIO_BIN_F64LE, 4, true)
-    for i in 1:prm.iL[1]
-        BDIO_write!(fb, dfoo[i,:])
-    end
-    BDIO_write_hash!(fb)
-
+    return eps, ns, nt, lsize, bt, nthm, qzero, fb
 end
 
 parsed_args = parse_commandline()
 infile = parsed_args["i"]
 
-eps, ns, nt, lsize, bt, nmsm, qzero, fb = read_options(infile)
+eps, ns, nt, lsize, bt, nthm, qzero, fb = read_options(infile)
 
-@info("MASTER FIELD SIMULATION AT BETA = $bt. TARGET SIZE: $(lsize[1]) x $(lsize[2])")
-@info("  MD PARAMETER eps = $eps")
-@info("  TRAJECTORY tau   = $(eps*ns)")
-@info("  MDU's / folding  = $(eps*ns*nt)")
+@info("MONTE CARLO SIMULATION AT BETA = $bt; LATTICE SIZE: $(lsize[1]) x $(lsize[2])")
+@info("  MD PARAMETER eps      = $eps")
+@info("  TRAJECTORY tau        = $(eps*ns)")
+@info("  THERMALIZATION MDU's  = $(eps*ns*nthm)")
 
 acc = Vector{Int64}()
-global l1  = 16
-global l2  = 16
-U   = CUDA.ones(ComplexF64, l1, l2, 2)    
-while true
-    global prm  = LattParm((l1, l2), bt)
-    global kprm = set_kernel_parameters(prm.iL[1], prm.iL[2])
+global prm  = LattParm((lsize[1], lsize[2]), bt)
+global kprm = set_kernel_parameters(prm.iL[1], prm.iL[2])
 
-    @info(" ## DOUBLING Lattice size: $(prm.iL[1]) x $(prm.iL[2])")
-    for i in 1:nt
-        @info(" # Trajectory $i / $nt [$(prm.iL[1]) x $(prm.iL[2])]")
-        HMC!(U, eps, ns, acc, prm, kprm, qzero=qzero)
-        @info("   Plaquette: ", Plaquette(U, prm, kprm))
-        @info("   Qtop:      ", Qtop(U, prm, kprm))
-    end
-
-    global U = unfold_fld!(U, prm, kprm)
-
-    global l1 = 2*prm.iL[1]
-    global l2 = 2*prm.iL[2]
-    if l1 > lsize[1]
-        break
-    end
+U   = CUDA.ones(ComplexF64, lsize[1], lsize[2], 2)    
+for i in 1:nthm
+    @info(" # THERMALIZATION Trajectory $i / $nthm [$(prm.iL[1]) x $(prm.iL[2])]")
+    HMC!(U, eps, ns, acc, prm, kprm, qzero=qzero)
+    @info("   Plaquette: ", Plaquette(U, prm, kprm))
+    @info("   Qtop:      ", Qtop(U, prm, kprm))
 end
 
 
-for j in 1:nmsm    
-    save_msm(fb, U, prm, kprm)    
-    
-    for i in 1:nt
-        @info(" # [measurement $j / $nmsm] Trajectory $i / $nt [$(prm.iL[1]) x $(prm.iL[2])]")
-        HMC!(U, eps, ns, acc, prm, kprm, qzero=qzero)
-        @info("   Plaquette: ", Plaquette(U, prm, kprm))
-        @info("   Qtop:      ", Qtop(U, prm, kprm))
-    end
+acc = Vector{Int64}()
+pl  = Vector{Float64}(undef, nt)
+qt  = Vector{Float64}(undef, nt)
+for j in 1:nt
+    @info(" # MEASUREMENT Trajectory $j / $nt [$(prm.iL[1]) x $(prm.iL[2])]")
+    HMC!(U, eps, ns, acc, prm, kprm, qzero=qzero)
+    pl[j] = Plaquette(U, prm, kprm)
+    qt[j] = Qtop(U, prm, kprm)
+    @info("   Plaquette: ", pl[j])
+    @info("   Qtop:      ", qt[j])
 end
     
-save_msm(fb, U, prm, kprm)
+BDIO_start_record!(fb, BDIO_BIN_F64LE, 3, true)
+for i in 1:prm.iL[1]
+    BDIO_write!(fb, pl)
+end
+BDIO_write_hash!(fb)
+
+BDIO_start_record!(fb, BDIO_BIN_F64LE, 4, true)
+for i in 1:prm.iL[1]
+    BDIO_write!(fb, qt)
+end
+BDIO_write_hash!(fb)
+
 BDIO_close!(fb)
