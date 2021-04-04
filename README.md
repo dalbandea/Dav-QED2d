@@ -86,8 +86,7 @@ where the parameters are:
 - beta: beta
 - ns: number of integration steps per trajectory
 - eps: step size in the integration of the eom.
-- nthm: Number of trajectories for thermalization
-- ntraj: Number of mesaurement trajectories
+- ntraj: Number of trajectories in each unfolding of the lattice.
 - Qzero: Reject all updates that make Q different from zero. (for
   simulations at fized topology).
 
