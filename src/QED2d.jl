@@ -1,6 +1,6 @@
 module QED2d
 
-import CUDA
+import CUDA, DelimitedFiles
 
 struct LattParm
     iL::Tuple{Int64,Int64}
@@ -27,5 +27,8 @@ export gamm5Dw, gamm5Dw_sqr, gamm5Dw_sqr_msq, tr_dQwdU
 
 include("QED2dSolver.jl")
 export CG
+
+include("QED2dLoadSave.jl")
+export save_gauge, load_gauge
 
 end # module
