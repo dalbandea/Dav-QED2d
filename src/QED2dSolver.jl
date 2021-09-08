@@ -11,13 +11,14 @@ function CG(so, U, si, am0, maxiter, eps, A, prm::LattParm, kprm::KernelParm)
     r  .= si
     p  .= si
     norm = CUDA.mapreduce(x -> abs2(x), +, si)
+    err = 0.0
     
-    tol = eps * normsq
+    tol = eps * norm
+	    # println( tol)
+	    iterations = 0
     for i in 1:maxiter
-        CUDA.@sync begin
-            CUDA.@cuda threads=kprm.threads blocks=kprm.blocks A(Ap, tmp, U, p, am0, prm, kprm)
-        end
-        prod  = CUBLAS.dot(p, q2p)
+        A(Ap, tmp, U, p, am0, prm, kprm)
+        prod  = CUDA.dot(p, Ap)
         alpha = norm/prod
 
         so .= so .+ alpha .*  p
@@ -26,6 +27,7 @@ function CG(so, U, si, am0, maxiter, eps, A, prm::LattParm, kprm::KernelParm)
         err = CUDA.mapreduce(x -> abs2(x), +, r)
         
         if err < tol
+		iterations=i
             break
         end
 
@@ -35,7 +37,10 @@ function CG(so, U, si, am0, maxiter, eps, A, prm::LattParm, kprm::KernelParm)
         norm = err;
     end
 
-    error("CG not converged after $maxiter iterations")
+    if err > tol
+	    println(err)
+	    error("CG not converged after $maxiter iterationss")
+    end
     
-    return i
+    return iterations
 end
