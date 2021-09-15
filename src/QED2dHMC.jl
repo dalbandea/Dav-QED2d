@@ -42,7 +42,7 @@ function HMC!(U, eps, ns, acc, prm::LattParm, kprm::KernelParm; qzero = false)
 end
 
 
-function HMC!(U, am0, eps, ns, acc, CGmaxiter, prm::LattParm, kprm::KernelParm; qzero = false)
+function HMC!(U, am0, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm; qzero = false)
 
     Ucp = similar(U)
     Ucp .= U
@@ -58,7 +58,9 @@ function HMC!(U, am0, eps, ns, acc, CGmaxiter, prm::LattParm, kprm::KernelParm; 
 	    CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F, U, X, am0, prm)
     end
 
-    OMF4!(mom, U, X, F, g5DX, am0,  eps, ns, CGmaxiter, prm::LattParm, kprm::KernelParm)
+    # OMF4!(mom, U, X, F, g5DX, am0,  eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm)
+    leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm)
+    
     
     hfin = real(Hamiltonian(mom, U, prm, kprm) + CUDA.dot(X,F))
 
@@ -87,7 +89,7 @@ function HMC!(U, am0, eps, ns, acc, CGmaxiter, prm::LattParm, kprm::KernelParm; 
     if (acc[end] == 0)
         @info("    REJECT: Energy [inital: $hini; final: $hfin; difference: $(hfin-hini)]; Pacc = $(count(acc.==1)/length(acc))")
     else
-        @info("    ACCEPT:  Energy [inital: $hini; final: $hfin; difference: $(hfin-hini)]; Pacc = $(count(acc.==1)/length(acc))")
+        @info("    ACCEPT: Energy [inital: $hini; final: $hfin; difference: $(hfin-hini)]; Pacc = $(count(acc.==1)/length(acc))")
     end
     
     return nothing
@@ -203,7 +205,7 @@ function OMF4!(mom, U, eps, ns, prm::LattParm, kprm::KernelParm)
     return nothing
 end
 
-function OMF4!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, prm::LattParm, kprm::KernelParm)
+function OMF4!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::LattParm, kprm::KernelParm)
 
     r1::Float64 =  0.08398315262876693
     r2::Float64 =  0.2539785108410595
@@ -218,7 +220,7 @@ function OMF4!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, prm::LattParm, kprm::K
 
     for i in 1:ns
         # STEP 1
-	CG(X, U, F, am0, maxiter, 0.000000000000001, gamm5Dw_sqr_msq, prm, kprm)
+	CG(X, U, F, am0, maxiter, tol, gamm5Dw_sqr_msq, prm, kprm)
 
 	CUDA.@sync begin
 		CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(g5DX, U, X, am0, prm)
@@ -235,7 +237,7 @@ function OMF4!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, prm::LattParm, kprm::K
         end
 
         # STEP 2
-	CG(X, U, F, am0, maxiter, eps, gamm5Dw_sqr_msq, prm, kprm)
+	CG(X, U, F, am0, maxiter, tol, gamm5Dw_sqr_msq, prm, kprm)
 
 	CUDA.@sync begin
 		CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(g5DX, U, X, am0, prm)
@@ -252,7 +254,7 @@ function OMF4!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, prm::LattParm, kprm::K
         end
 
         # STEP 3
-	CG(X, U, F, am0, maxiter, eps, gamm5Dw_sqr_msq, prm, kprm)
+	CG(X, U, F, am0, maxiter, tol, gamm5Dw_sqr_msq, prm, kprm)
 
 	CUDA.@sync begin
 		CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(g5DX, U, X, am0, prm)
@@ -269,7 +271,7 @@ function OMF4!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, prm::LattParm, kprm::K
         end
 
         # STEP 4
-	CG(X, U, F, am0, maxiter, eps, gamm5Dw_sqr_msq, prm, kprm)
+	CG(X, U, F, am0, maxiter, tol, gamm5Dw_sqr_msq, prm, kprm)
 
 	CUDA.@sync begin
 		CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(g5DX, U, X, am0, prm)
@@ -286,7 +288,7 @@ function OMF4!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, prm::LattParm, kprm::K
         end
 
         # STEP 5
-	CG(X, U, F, am0, maxiter, eps, gamm5Dw_sqr_msq, prm, kprm)
+	CG(X, U, F, am0, maxiter, tol, gamm5Dw_sqr_msq, prm, kprm)
 
 	CUDA.@sync begin
 		CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(g5DX, U, X, am0, prm)
@@ -303,7 +305,7 @@ function OMF4!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, prm::LattParm, kprm::K
         end
 
         # STEP 6
-	CG(X, U, F, am0, maxiter, eps, gamm5Dw_sqr_msq, prm, kprm)
+	CG(X, U, F, am0, maxiter, tol, gamm5Dw_sqr_msq, prm, kprm)
 
 	CUDA.@sync begin
 		CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(g5DX, U, X, am0, prm)
@@ -318,4 +320,61 @@ function OMF4!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, prm::LattParm, kprm::K
     end
 
     return nothing
+end
+
+
+function leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm)
+
+	# First half-step for momenta
+	update_momenta!(mom, U, X, F, g5DX, am0, 0.5*eps, ns, CGmaxiter, tol, prm, kprm)
+
+	# ns-1 steps
+	for i in 1:(ns-1) 
+		# Update gauge links
+		CUDA.@sync begin
+		    CUDA.@cuda threads=kprm.threads blocks=kprm.blocks updt_fld!(U, mom, eps)         
+		end
+		#Update momenta
+		update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm, kprm)
+	end
+	# Last update for gauge links
+        CUDA.@sync begin
+            CUDA.@cuda threads=kprm.threads blocks=kprm.blocks updt_fld!(U, mom, eps)         
+        end
+
+	# Last half-step for momenta
+	update_momenta!(mom, U, X, F, g5DX, am0, 0.5*eps, ns, CGmaxiter, tol, prm, kprm)
+
+	return nothing
+end
+
+function update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::LattParm, kprm::KernelParm)
+	# frc1 and frc2 will be for the gauge part of the force, frc for the
+	# fermion part
+	frc1 = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)
+	frc2 = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)
+	frc = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)
+
+	# Solve DX = F for X
+	iter = CG(X, U, F, am0, maxiter, tol, gamm5Dw_sqr_msq, prm, kprm)
+
+	# Apply gamm5D to X
+	CUDA.@sync begin
+		CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(g5DX, U, X, am0, prm)
+	end
+	
+	# Get fermion part of the force in frc
+	CUDA.@sync begin
+            CUDA.@cuda threads=kprm.threads blocks=kprm.blocks tr_dQwdU(frc, U, X, g5DX, prm)
+        end
+
+	# Get gauge part of the force in frc1 and frc2
+        CUDA.@sync begin
+            CUDA.@cuda threads=kprm.threads blocks=kprm.blocks krnl_force!(frc1, frc2, U, prm)
+        end
+
+	# Final force is frc1+frc2+frc
+        mom .= mom .+ (eps).*(frc1.+frc2.+frc)
+
+	return nothing
 end
