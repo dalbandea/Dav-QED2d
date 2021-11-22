@@ -4,11 +4,13 @@ io = open("log.txt", "w+")
 global_logger(SimpleLogger(io))
 
 import Pkg
-Pkg.activate("/lhome/ific/a/alramos/s.images/julia/workspace/QED2d")
+# Pkg.activate("/lhome/ific/a/alramos/s.images/julia/workspace/QED2d")
+# Pkg.activate("/home/david/src/alberto-qed2d.jl/")
+Pkg.activate("/home/david/git/dalbandea/phd/codes/1-Schwinger-model/Dav-QED2d")
 using QED2d
 
-prm  = LattParm((512,512), 5.25)
-kprm = KernelParm((512, 1), (1,512))
+prm  = LattParm((90,90), 1.0)
+kprm = KernelParm((90, 1), (1,90))
 
 print("Allocating gauge field...")
 U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)
@@ -29,11 +31,11 @@ mom = CUDA.zeros(Float64,  prm.iL[1], prm.iL[2], 2)
 println(" DONE")
 
 acc = Vector{Int64}()
-eps = 0.025
-ns  = 20
-@time HMC!(U, eps, ns, acc, prm, kprm, qzero=true)
-for i in 1:1000
-    @time HMC!(U, eps, ns, acc, prm, kprm, qzero=true)
+eps = 0.1
+ns  = 10
+@time HMC!(U, eps, ns, acc, prm, kprm, qzero=false)
+for i in 1:10
+    @time HMC!(U, eps, ns, acc, prm, kprm, qzero=false)
     println("   Plaquette: ", Plaquette(U, prm, kprm))
     println("   Qtop:      ", Qtop(U, prm, kprm))
     println("Pacc = $(count(acc.==1)/length(acc))")

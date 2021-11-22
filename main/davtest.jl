@@ -15,7 +15,7 @@ U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)
 
 CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F, U, X, am0, prm)
 
-CG(X, U, F, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_msq, prm, kprm)
+CG(X, U, F, am0, 100000, 0.000000000000000000000001, gamm5Dw_sqr_msq, prm, kprm)
 println(CUDA.dot(X,F))
 
 # for i in 1:1000

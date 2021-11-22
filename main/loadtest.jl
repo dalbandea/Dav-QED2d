@@ -8,7 +8,7 @@ prm  = LattParm((50,50), 6.05)
 kprm = KernelParm((50, 1), (1,50))
 am0 = 0.01
 file = "statistics.txt"
-read_from = 644
+read_from = 0
 
 
 print("Allocating gauge field...")
@@ -42,6 +42,6 @@ for i in (read_from+1):1000
 	plaq = Plaquette(U, prm, kprm)
 	qtop = Qtop(U, prm, kprm)
 	write(open(file, "a"), "$(plaq) $(qtop)\n")
-	gauge_file = "configs/config_$(prm.iL[1])_$(prm.iL[2])_b$(prm.beta)_m$(am0)_n$(i)"
+	local gauge_file = "configs/config_$(prm.iL[1])_$(prm.iL[2])_b$(prm.beta)_m$(am0)_n$(i)"
 	save_gauge(U, gauge_file, prm)
 end

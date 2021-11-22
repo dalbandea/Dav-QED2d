@@ -1,0 +1,24 @@
+┌ Info:     ACCEPT:  Energy [inital: 7945.614264878624; final: 7945.614264878535; difference: -8.913048077374697e-11]; Pacc = 1.0
+└ @ QED2d /home/david/src/Schwinger-project/QED2d/src/QED2dHMC.jl:38
+┌ Info:     REJECT: Energy [inital: 10335.299281878692; final: 10335.299281879606; difference: 9.149516699835658e-10]; Pacc = 0.5
+└ @ QED2d /home/david/src/Schwinger-project/QED2d/src/QED2dHMC.jl:36
+┌ Info:     REJECT: Energy [inital: 10453.640376243902; final: 10453.640376244955; difference: 1.053194864653051e-9]; Pacc = 0.3333333333333333
+└ @ QED2d /home/david/src/Schwinger-project/QED2d/src/QED2dHMC.jl:36
+┌ Info:     REJECT: Energy [inital: 10347.427584301382; final: 10347.4275843022; difference: 8.185452315956354e-10]; Pacc = 0.25
+└ @ QED2d /home/david/src/Schwinger-project/QED2d/src/QED2dHMC.jl:36
+┌ Info:     REJECT: Energy [inital: 10549.307121686234; final: 10549.307121687152; difference: 9.185896487906575e-10]; Pacc = 0.2
+└ @ QED2d /home/david/src/Schwinger-project/QED2d/src/QED2dHMC.jl:36
+┌ Info:     REJECT: Energy [inital: 10406.223483340436; final: 10406.223483341519; difference: 1.0822986951097846e-9]; Pacc = 0.16666666666666666
+└ @ QED2d /home/david/src/Schwinger-project/QED2d/src/QED2dHMC.jl:36
+┌ Info:     REJECT: Energy [inital: 10491.590010627915; final: 10491.590010629028; difference: 1.1132215149700642e-9]; Pacc = 0.14285714285714285
+└ @ QED2d /home/david/src/Schwinger-project/QED2d/src/QED2dHMC.jl:36
+┌ Info:     ACCEPT:  Energy [inital: 10445.839300043117; final: 10445.83930004406; difference: 9.422365110367537e-10]; Pacc = 0.25
+└ @ QED2d /home/david/src/Schwinger-project/QED2d/src/QED2dHMC.jl:38
+┌ Info:     REJECT: Energy [inital: 11168.46962297574; final: 11168.469622976467; difference: 7.275957614183426e-10]; Pacc = 0.2222222222222222
+└ @ QED2d /home/david/src/Schwinger-project/QED2d/src/QED2dHMC.jl:36
+┌ Info:     REJECT: Energy [inital: 11265.20753351637; final: 11265.20753351718; difference: 8.094502845779061e-10]; Pacc = 0.2
+└ @ QED2d /home/david/src/Schwinger-project/QED2d/src/QED2dHMC.jl:36
+┌ Info:     REJECT: Energy [inital: 11176.90569449561; final: 11176.905694496389; difference: 7.785274647176266e-10]; Pacc = 0.18181818181818182
+└ @ QED2d /home/david/src/Schwinger-project/QED2d/src/QED2dHMC.jl:36
+┌ Info: Profiling has finished, open the report listed above with `nsight-sys`
+└ @ CUDA.Profile /home/david/.julia/packages/CUDA/k52QH/lib/cudadrv/profile.jl:60
