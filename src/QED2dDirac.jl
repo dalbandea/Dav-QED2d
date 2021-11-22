@@ -59,6 +59,20 @@ function gamm5Dw_sqr_msq(so, tmp, U, si, am0::Float64, prm::LattParm, kprm::Kern
     return nothing
 end
 
+function gamm5Dw_sqr_musq(so, tmp, U, si, am0::Float64, mu_j::Float64, prm::LattParm, kprm::KernelParm)
+
+    CUDA.@sync begin
+        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(so, U, si, am0, prm)
+    end
+    tmp .= so
+    CUDA.@sync begin
+        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(so, U, tmp, am0, prm)
+    end
+    so .= so .+ (mu_j)^2*si
+    
+    return nothing
+end
+
 function tr_dQwdU(frc, U, X, g5DwX, prm::LattParm)
 
     i1 = (CUDA.blockIdx().x - 1) * CUDA.blockDim().x + CUDA.threadIdx().x
