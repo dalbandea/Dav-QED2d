@@ -4,9 +4,9 @@ using Pkg
 Pkg.activate(".")
 using QED2d
 
-prm  = LattParm((50,50), 6.05)
-kprm = KernelParm((50, 1), (1,50))
-am0 = 0.01
+prm  = LattParm((10,10), 6.05)
+kprm = KernelParm((10, 1), (1,10))
+am0 = 10.0
 file = "statistics.txt"
 read_from = 0
 

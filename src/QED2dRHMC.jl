@@ -5,34 +5,37 @@ a_r(r, n, eps) = Jacobi.cn(r*v(n,eps), k(eps)^2)^2/Jacobi.sn(r*v(n,eps), k(eps)^
 c_r(r, n, eps) = Jacobi.sn(r*v(n,eps), k(eps)^2)^2
 
 
-mu(j, n, eps) = a_r(2*j, n, eps)^(1/2) # falta multiplicar por r_b
-nu(j, n, eps) = a_r(2*j-1, n, eps)^(1/2) # falta multiplicar por r_b
+mu(j, n, eps, r_b) = r_b * a_r(2*j, n, eps)^(1/2)
+nu(j, n, eps, r_b) = r_b * a_r(2*j-1, n, eps)^(1/2)
 
-function rho_mu(j, k, l, n, eps)
+function rho_mu(j, k, l, n, eps, r_b)
 	if(j<k || j>l)
 		throw("j is not between k and l")
 	end
 
-	res = ( nu(j, n, eps)^2 - mu(j, n, eps)^2 )
+	res = ( nu(j, n, eps, r_b)^2 - mu(j, n, eps, r_b)^2 )
 
 	for m in k:l
 		if m!=j
-			res *= (nu(m, n, eps)^2 - mu(j, n, eps)^2)/(mu(m, n, eps)^2 - mu(j, n, eps)^2)
+			res *= (nu(m, n, eps, r_b)^2 - mu(j, n, eps, r_b)^2)/(mu(m, n, eps, r_b)^2 - mu(j, n, eps, r_b)^2)
 		end
 	end
 
 	return res
 end
 
-function P(k, l, n, eps, Y)
+function P(k, l, n, eps, r_b, Y)
 	dim = size(Y,2) # get dimensions of matrix
 	res = LinearAlgebra.I(dim)
 
 	# using LinearAlgebra.I(dim) makes it compute correctly when Y is just a
 	# float number
-	for j in k:l
-		res = res .+ rho_mu(j, k, l, n, eps)*(Y .+ mu(j, n, eps)^2*LinearAlgebra.I(dim) )^(-1)
+	if(k!=0 && l!=0)
+		for j in k:l
+			res = res .+ rho_mu(j, k, l, n, eps, r_b)*(Y .+ mu(j, n, eps, r_b)^2*LinearAlgebra.I(dim) )^(-1)
+		end
 	end
+	println(res)
 	
 	return res
 end

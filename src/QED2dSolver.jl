@@ -98,5 +98,5 @@ function MultiCG(so, U, si, am0, maxiter, eps, A, rprm::RHMCParm, prm::LattParm,
 		CG(aux, U, si, am0, rprm.mu[j], maxiter, eps, A, prm, kprm)
 		so .= so .+ rprm.rho[j]*aux
 	end
-	so .= rprm.A*so
+	so .= rprm.r_b^(-1) * rprm.A * so
 end
