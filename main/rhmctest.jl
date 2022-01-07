@@ -14,9 +14,9 @@ if read_from != 0
 	load_gauge(U, gauge_file, prm)
 end
 
-r_a_rhmc = 0.2 |> sqrt
-r_b_rhmc = 23  |> sqrt
-n_rhmc = 5
+r_a_rhmc = 98 |> sqrt
+r_b_rhmc = 201 |> sqrt
+n_rhmc = 3
 eps_rhmc = ( r_a_rhmc/r_b_rhmc )^2
 mu_rhmc = Array{Float64}(undef, n_rhmc)
 rho_rhmc = Array{Float64}(undef, n_rhmc)
@@ -34,8 +34,8 @@ X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[
 println(CUDA.dot(X,X))
 F = CUDA.zeros(ComplexF64,prm.iL[1], prm.iL[2], 2)
 
-# U = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2)
-U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)
+U = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2)
+# U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)
 
 
 MultiCG(F, U, X, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
@@ -66,20 +66,20 @@ shift = 15 # this shift helps convergence
 
 for i in 1:1000
 	b_aux = copy(b)
-	# gamm5Dw_sqr(b_aux, U, b, am0, prm, kprm)
+	gamm5Dw_sqr(b_aux, U, b, am0, prm, kprm)
 	# gamm5Dw_sqr_sqr(b_aux, U, b, am0, prm, kprm)
 	# CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(b_aux, U, b, am0, prm)
-	Dw(b_aux, U, b, am0, prm, kprm)
+	# Dw(b_aux, U, b, am0, prm, kprm)
 	# MultiCG(b_aux, U, b, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
 	b_aux .= b_aux .+ shift*b
 	global b = b_aux/CUDA.dot(b_aux,b_aux)
 	# println("Segon: $(b[1,1,1])")
 end
 bnext = copy(b)
-# gamm5Dw_sqr(bnext, U, b, am0, prm, kprm)
+gamm5Dw_sqr(bnext, U, b, am0, prm, kprm)
 # gamm5Dw_sqr_sqr(bnext, U, b, am0, prm, kprm)
 # CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(bnext, U, b, am0, prm)
-Dw(bnext, U, b, am0, prm, kprm)
+# Dw(bnext, U, b, am0, prm, kprm)
 # MultiCG(bnext, U, b, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
 bnext .= bnext .+ shift*b
 lambda_max = CUDA.dot(b,bnext)/CUDA.dot(b,b) - shift

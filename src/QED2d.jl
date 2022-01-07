@@ -19,6 +19,7 @@ struct RHMCParm
 	A::Float64
 	rho::Vector{Float64}
 	mu::Vector{Float64}
+    nu::Vector{Float64}
 end
 export LattParm, KernelParm, RHMCParm
 

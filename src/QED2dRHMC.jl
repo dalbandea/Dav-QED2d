@@ -8,7 +8,7 @@ c_r(r, n, eps) = Jacobi.sn(r*v(n,eps), k(eps)^2)^2
 mu(j, n, eps, r_b) = r_b * a_r(2*j, n, eps)^(1/2)
 nu(j, n, eps, r_b) = r_b * a_r(2*j-1, n, eps)^(1/2)
 
-function rho_mu(j, k, l, n, eps, r_b)
+function rho_mu(j, k, l, n, eps, r_b)       # Lüscher eq. (3.5)
 	if(j<k || j>l)
 		throw("j is not between k and l")
 	end
@@ -24,7 +24,23 @@ function rho_mu(j, k, l, n, eps, r_b)
 	return res
 end
 
-function P(k, l, n, eps, r_b, Y)
+function rho_nu(j, k, l, n, eps, r_b)       # Lüscher eq. (3.9)
+	if(j<k || j>l)
+		throw("j is not between k and l")
+	end
+
+	res = ( mu(j, n, eps, r_b) - nu(j, n, eps, r_b) )
+
+	for m in k:l
+		if m!=j
+			res *= (mu(m, n, eps, r_b) - nu(j, n, eps, r_b))/(nu(m, n, eps, r_b) - nu(j, n, eps, r_b))
+		end
+	end
+
+	return res
+end
+
+function P(k, l, n, eps, r_b, Y)            # Lüscher eq. (3.4), not used in code
 	dim = size(Y,2) # get dimensions of matrix
 	res = LinearAlgebra.I(dim)
 
