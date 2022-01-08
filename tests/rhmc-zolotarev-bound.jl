@@ -56,7 +56,7 @@ end
 lsize = 20          # lattice size
 lbeta = 6.05        # beta
 am0 = 10.0          # bare mass
-n_rhmc = 5          # number of Zolotarev monomial pairs
+n_rhmc = 2          # number of Zolotarev monomial pairs
 
 global prm  = LattParm((lsize,lsize), lbeta)
 global kprm = KernelParm((lsize, 1), (1,lsize))
@@ -78,14 +78,16 @@ r_b_rhmc = lambda_max |> real |> x->round(x)+1 |> sqrt  # eps_rhmc is defined
                                                         # eigenvalues of D^†D.
 eps_rhmc = ( r_a_rhmc/r_b_rhmc )^2
 mu_rhmc = Array{Float64}(undef, n_rhmc)
+nu_rhmc = Array{Float64}(undef, n_rhmc)
 rho_rhmc = Array{Float64}(undef, n_rhmc)
 A_rhmc = A(n_rhmc,eps_rhmc)
 
 for j in 1:n_rhmc
     mu_rhmc[j] = mu(j,n_rhmc,eps_rhmc, r_b_rhmc)
+    nu_rhmc[j] = nu(j,n_rhmc,eps_rhmc, r_b_rhmc)
     rho_rhmc[j] = rho_mu(j,1,n_rhmc,n_rhmc,eps_rhmc, r_b_rhmc)
 end
-rprm = RHMCParm(r_b_rhmc, n_rhmc, eps_rhmc, A_rhmc, rho_rhmc, mu_rhmc)
+rprm = RHMCParm(r_b_rhmc, n_rhmc, eps_rhmc, A_rhmc, rho_rhmc, mu_rhmc, nu_rhmc)
 
 
 # Generate random pseudofermionic field
@@ -106,7 +108,62 @@ deviation = X - X_f
 delta_rhmc = delta(n_rhmc, eps_rhmc) |> (x -> x*(2+x)) # maximum error
 delta_X = sqrt(CUDA.dot(deviation, deviation))/sqrt(CUDA.dot(X,X))
 # Se debe cumplir que delta_X ≤ delta_rhmc.
-real(delta_X) < delta_rhmc && println("Test passed")  || println("Test not passed") 
+real(delta_X) < delta_rhmc ? println("Test passed")  : println("Test not passed") 
+
+
+
+############## END OF Z BOUND. BEGIN OF REWEIGHTING FACTOR W ##################
+
+
+# Returns ZᵖX_in, with Z = D†DR² - I
+function LuscherZp(Z, p::Int64, U, X_in, am0, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)
+
+    function LuscherZ(Z, U, X_in, am0, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)
+        # Z = D†DR² X_in
+        MultiCG(Z, U, X_in, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
+        tmp = copy(Z)
+        MultiCG(Z, U, tmp, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
+        tmp .= Z
+        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(Z, U, tmp, am0, prm)
+        tmp .= Z
+        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(Z, U, tmp, am0, prm)
+        # Z = Z - X_in = (D†DR² - I) X_in
+        Z .= Z .- X_in
+        return nothing
+    end
+
+    tmp = copy(X_in)
+    # At the end, Z = (D†DR² - I)ᵖ X_in
+    for i in 1:p
+        LuscherZ(Z, U, tmp, am0, rprm, prm, kprm)
+        tmp .= Z
+    end
+
+    return nothing
+
+end
+
+ZpX = copy(X)
+power = 3
+LuscherZp(ZpX,power,U,X,am0,rprm,prm,kprm)  # this returns ZᵖX in the first argument
+XZpX_code = CUDA.dot(X,ZpX) |> real         # It must hold that (X,ZᵖX) ≤ 2N(2δ)ᵖ
+XZpX_teo = 2*prm.iL[1]*prm.iL[2]*(2*delta_rhmc)^power
+XZpX_code < XZpX_teo ? println("Test passed") : println("Test not passed")
+
+
+
+# Compute reweighting factor W_N with N=1, eq. (4.1)
+
+res = 0.0
+Tfactor = 1/2   # Taylor factor of expansion (1+Z)^(-1/2)
+ZpX = copy(X)
+for i in 1:5
+    LuscherZp(ZpX,i,U,X,am0,rprm,prm,kprm)  
+    res += Tfactor * CUDA.dot(X,ZpX)
+    Tfactor *= (-1)*(2*i+1)/2/factorial(i+1)*factorial(i)
+end
+W1 = exp(res)   # if 2Nδ≤0.01, W₁ is expected to deviate from 1 at most by 1%
+
 
 ############## SCRIPT CHECKED UNTIL HERE ##################
 
