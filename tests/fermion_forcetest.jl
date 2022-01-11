@@ -6,9 +6,9 @@ using QED2d
 # CUDA.allowscalar(false)
 CUDA.allowscalar(true)
 
-prm  = LattParm((50,50), 6.05)
-kprm = KernelParm((50, 1), (1,50))
-am0 = 0.01
+prm  = LattParm((10,10), 6.05)
+kprm = KernelParm((10, 1), (1,10))
+am0 = 10.0
 file = "statistics.txt"
 read_from = 93
 
@@ -32,25 +32,12 @@ else
 end
 
 # Point to modify
-link_x = 20  # position x of link
-link_y = 10 # position y of link
+link_x = 8  # position x of link
+link_y = 4 # position y of link
 link_dir = 2 # direction of link
 
 # Compute initial action
 X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2).*(im))/sqrt(2)
-# X_h = zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)
-# X2 = DelimitedFiles.readdlm("/home/david/test/schwinger/X.txt")[:,2]
-# X1_re = DelimitedFiles.readdlm("/home/david/test/schwinger/X.txt")[begin:2:end,1]
-# X1_re = reshape( X1_re, (prm.iL[1], prm.iL[2]) )
-# X1_im = DelimitedFiles.readdlm("/home/david/test/schwinger/X.txt")[begin:2:end,2]
-# X1_im = reshape( X1_im, (prm.iL[1], prm.iL[2]) )
-# X2_re = DelimitedFiles.readdlm("/home/david/test/schwinger/X.txt")[2:2:end,1]
-# X2_re = reshape( X2_re, (prm.iL[1], prm.iL[2]) )
-# X2_im = DelimitedFiles.readdlm("/home/david/test/schwinger/X.txt")[2:2:end,2]
-# X2_im = reshape( X2_im, (prm.iL[1], prm.iL[2]) )
-# X_h[:,:,1] = X1_re .+ X1_im*im
-# X_h[:,:,2] = X2_re .+ X2_im*im
-# CUDA.copyto!(X, X_h)
 Sini = CUDA.dot(X,X) + Action(U, prm, kprm)
 println("Initial action: ", Action(U, prm, kprm))
 
@@ -80,11 +67,19 @@ CUDA.@sync begin
     CUDA.@cuda threads=kprm.threads blocks=kprm.blocks tr_dQwdU(frc, U, X, g5DX, prm)
 end
 
+CUDA.@sync begin
+    CUDA.@cuda threads=kprm.threads blocks=kprm.blocks tr_dQwdU(frc, U, X, g5DX, prm)
+end
+
+CUDA.@sync begin
+    CUDA.@cuda threads=kprm.threads blocks=kprm.blocks tr_dQwdU_dav(frc, U, X, g5DX, prm)
+end
+
 Frc .= frc1 .+ frc2 .+ frc
 Frc_i = Frc[link_x, link_y, link_dir]
 
 # Duplicate configuration U and modify one link
-Deps = 0.0001
+Deps = 0.000001
 
 U2 = similar(U)
 U2 .= U

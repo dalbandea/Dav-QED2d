@@ -53,10 +53,10 @@ function power_method(U, am0)
 end
 
 # Lattice and Zolotarev parameters
-lsize = 20          # lattice size
-lbeta = 6.05        # beta
+lsize = 40          # lattice size
+lbeta = 5.00        # beta
 am0 = 10.0          # bare mass
-n_rhmc = 2          # number of Zolotarev monomial pairs
+n_rhmc = 5          # number of Zolotarev monomial pairs
 
 global prm  = LattParm((lsize,lsize), lbeta)
 global kprm = KernelParm((lsize, 1), (1,lsize))
@@ -70,8 +70,8 @@ lambda_min, lambda_max = power_method(U, am0)   # Apply power method to extract
                                                 # eigenvalues of D^†D
 
 # Generate Zolotarev parameters
-r_a_rhmc = lambda_min |> real |> x->round(x)-1 |> sqrt  
-r_b_rhmc = lambda_max |> real |> x->round(x)+1 |> sqrt  # eps_rhmc is defined
+r_a_rhmc = lambda_min |> real |> x->0.8*x |> sqrt  
+r_b_rhmc = lambda_max |> real |> x->1.2*x |> sqrt  # eps_rhmc is defined
                                                         # such that r_a and r_b
                                                         # are the sqrt of
                                                         # minimum and maximum

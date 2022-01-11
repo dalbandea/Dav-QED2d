@@ -3,6 +3,8 @@ using Revise
 using Pkg
 Pkg.activate(".")
 using QED2d
+# CUDA.allowscalar(false)
+CUDA.allowscalar(true)
 
 """
     power_method(U, am0)
@@ -53,16 +55,35 @@ function power_method(U, am0)
 end
 
 # Lattice and Zolotarev parameters
-lsize = 20          # lattice size
+lsize = 10          # lattice size
 lbeta = 6.05        # beta
 am0 = 10.0          # bare mass
-n_rhmc = 5          # number of Zolotarev monomial pairs
+n_rhmc = 2          # number of Zolotarev monomial pairs
 
 global prm  = LattParm((lsize,lsize), lbeta)
 global kprm = KernelParm((lsize, 1), (1,lsize))
 
-U = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2)
+file = "statistics.txt"
+read_from = 93
+
+print("Allocating gauge field...")
 # U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)
+U = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2)
+println(" DONE")
+
+Random.seed!(CURAND.default_rng(), 1234)
+Random.seed!(1234)
+
+if read_from == 0
+	println("Starting new run")
+	# @time HMC!(U, am0, eps, ns, acc, CGmaxiter, CGtol, prm, kprm, qzero=false)
+	# println("   Plaquette: ", Plaquette(U, prm, kprm))
+	# println("   Qtop:      ", Qtop(U, prm, kprm))
+	# write(open(file, "w"), "$(Plaquette(U, prm, kprm)) $(Qtop(U, prm, kprm))\n")
+else
+	gauge_file = "configs/config_$(prm.iL[1])_$(prm.iL[2])_b$(prm.beta)_m$(am0)_n$(read_from)"
+	load_gauge(U, gauge_file, prm)
+end
 
 
 lambda_min, lambda_max = power_method(U, am0)   # Apply power method to extract
@@ -92,35 +113,90 @@ rprm = RHMCParm(r_b_rhmc, n_rhmc, eps_rhmc, A_rhmc, rho_rhmc, mu_rhmc, nu_rhmc)
 # Vector of n_rhmc pseudofermion fields
 F = Array{CuArray}(undef, n_rhmc)
 
-# Check that X†X = ξ†ϕᵢ for each pseudofermion ϕᵢ
-prod_in = 0.0       # X†X
-prod_out = 0.0      # ξ†ϕᵢ
+
+# Point to modify
+link_x = 2  # position x of link
+link_y = 5 # position y of link
+link_dir = 1 # direction of link
 
 for i in 1:n_rhmc
-    # Generate random pseudofermionic field
-    X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2)
-    prod_in += CUDA.dot(X,X)            # Store action of pseudofermion i, X†X
-    # Initialize pseudofermion i
-    F[i] = CUDA.zeros(ComplexF64,prm.iL[1], prm.iL[2], 2)
+    # Compute initial action
+    X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2).*(im))/sqrt(2)
+    # Sini = CUDA.dot(X,X) + Action(U, prm, kprm)
+    Sini = CUDA.dot(X,X)
+    println("Initial action: ", Sini)
 
-    # ϕᵢ = (γD+iμ)X
-    CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F[i], U, X, am0, prm)
+    # Get pseudofermion field
+    F[i] = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)
+    ### ϕᵢ = (γD+iμ)X
+    CUDA.@sync begin
+        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F[i], U, X, am0, prm)
+    end
     F[i] .= F[i] .+ im*rprm.mu[i] .* X
-
-    # ϕᵢ = (D†D+ν²)⁻¹ϕᵢ
+    ### ϕᵢ = (D†D+ν²)⁻¹ϕᵢ
     aux_F = copy(F[i])
     CG(F[i], U, aux_F, am0, rprm.nu[i], 100000, 0.00000000000000000001, gamm5Dw_sqr_musq, prm, kprm)
-
-    # ϕᵢ = (γD-iν)ϕᵢ
+    ### ϕᵢ = (γD-iν)ϕᵢ
     aux_F .= F[i]
-    CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F[i], U, aux_F, am0, prm)
+    CUDA.@sync begin
+        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F[i], U, aux_F, am0, prm)
+    end
     F[i] .= F[i] .- im*rprm.nu[i] .* aux_F
 
-    # ξ = (D†D+μ²)⁻¹(D†D+ν²)ϕᵢ
+    # Compute the analytical force
+    g5DX = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)
+    frc1 = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)
+    frc2 = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)
+    frc = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)
+    Frc = similar(frc)
+    CGmaxiter = 10000
+    CGtol = 0.00000000000000001
+
+    CG(X, U, F[i], am0, rprm.mu[i], CGmaxiter, CGtol, gamm5Dw_sqr_musq, prm, kprm)
+    CUDA.@sync begin
+        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(g5DX, U, X, am0, prm)
+    end
+    CUDA.@sync begin
+        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks krnl_force!(frc1, frc2, U, prm)
+    end
+    CUDA.@sync begin
+        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks tr_dQwdU(frc, U, X, g5DX, prm)
+    end
+
+    # Frc .= frc1 .+ frc2 .+ frc
+    Frc .= frc*(rprm.nu[i]^2-rprm.mu[i]^2)
+    Frc_i = Frc[link_x, link_y, link_dir]
+
+    # Duplicate configuration U and modify one link
+    Deps = 0.000001
+
+    U2 = similar(U)
+    U2 .= U
+    U2[link_x, link_y, link_dir] = Complex(CUDA.cos(Deps), CUDA.sin(Deps))*U2[link_x, link_y, link_dir]
+
+    # Inversion of Dirac operator
+    ## ξ = (D†D+μ²)⁻¹(D†D+ν²)ϕᵢ
     xi = copy(F[i])
     tmp = copy(F[i])
-    gamm5Dw_sqr_musq(xi, tmp, U, F[i], am0, rprm.nu[i], prm, kprm)
+    gamm5Dw_sqr_musq(xi, tmp, U2, F[i], am0, rprm.nu[i], prm, kprm)
     tmp .= xi
-    CG(xi, U, tmp, am0, rprm.mu[i], 100000, 0.00000000000000000001, gamm5Dw_sqr_musq, prm, kprm)
-    prod_out += CUDA.dot(xi, F[i])      # Store action of pseudofermion i, ξ†ϕᵢ
+    CG(xi, U2, tmp, am0, rprm.mu[i], 100000, 0.00000000000000000001, gamm5Dw_sqr_musq, prm, kprm)
+
+    # Compute final action
+    # Sfin = CUDA.dot(xi,F[i]) + Action(U2, prm, kprm)
+    Sfin = CUDA.dot(xi,F[i])
+
+    # Compute numerical force
+    F_num = (Sfin - Sini)/Deps
+
+    println(Frc_i+F_num)
 end
+
+
+println("Numerical: ", F_num)
+println("Analytic: ", Frc_i)
+
+
+
+
+
