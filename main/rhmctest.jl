@@ -7,9 +7,7 @@ using QED2d
 # Lattice and Zolotarev parameters
 lsize = 20          # lattice size
 lbeta = 5.00        # beta
-
-am0 = 0.2           # bare mass
-n_rhmc = 5          # number of Zolotarev monomial pairs
+am0 = [0.2,0.2]           # bare mass
 read_from = 0
 
 
@@ -24,32 +22,25 @@ if read_from != 0
 end
 
 
-lambda_min, lambda_max = power_method(U, am0)   # Apply power method to extract
-                                                # maximum and minimum
-                                                # eigenvalues of D^†D
+lambda_min, lambda_max = power_method(U, am0, prm, kprm)    # Apply power method
+                                                            # to extract maximum
+                                                            # and minimum
+                                                            # eigenvalues of
+                                                            # D^†D
 
 # Generate Zolotarev parameters
-r_a_rhmc = 80 |> real |> x->round(x)-1 |> sqrt  
-r_b_rhmc = 220 |> real |> x->round(x)+1 |> sqrt         # eps_rhmc is defined
+n_rhmc = 5                                              # number of Zolotarev
+                                                        # monomial pairs
+r_a_rhmc = 0.06 |> real |> x->x*0.6 |> sqrt  
+r_b_rhmc = 20.0 |> real |> x->x*1.4 |> sqrt       # eps_rhmc is defined
                                                         # such that r_a and r_b
                                                         # are the sqrt of
                                                         # minimum and maximum
                                                         # eigenvalues of D^†D.
-eps_rhmc = ( r_a_rhmc/r_b_rhmc )^2
-mu_rhmc = Array{Float64}(undef, n_rhmc)
-nu_rhmc = Array{Float64}(undef, n_rhmc)
-rho_rhmc = Array{Float64}(undef, n_rhmc)
-A_rhmc = A(n_rhmc,eps_rhmc)
-
-for j in 1:n_rhmc
-    mu_rhmc[j] = mu(j,n_rhmc,eps_rhmc, r_b_rhmc)
-    nu_rhmc[j] = nu(j,n_rhmc,eps_rhmc, r_b_rhmc)
-    rho_rhmc[j] = rho_mu(j,1,n_rhmc,n_rhmc,eps_rhmc, r_b_rhmc)
-end
-rprm = RHMCParm(r_b_rhmc, n_rhmc, eps_rhmc, A_rhmc, rho_rhmc, mu_rhmc, nu_rhmc)
-
+rprm = get_rhmc_params(n_rhmc, r_a_rhmc, r_b_rhmc)
 
 acc = Vector{Int64}()
+reweight = Vector{Float64}()
 plaqs = Vector{Float64}()
 qtops = Vector{Float64}()
 
@@ -61,12 +52,18 @@ CGtol = 1e-16
 
 @time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false)
 
-for i in 1:100
+for i in 1:2
     @time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false)
-	plaq = Plaquette(U, prm, kprm)
-    push!(plaqs, plaq)
-	qtop = Qtop(U, prm, kprm)
-    push!(qtops, qtop)
-    println("Last plaquette: $plaq")
-    println("Last Q: $qtop")
+    Plaquette(U, prm, kprm) |> plaq_U -> push!(plaqs, plaq_U)
+	Qtop(U, prm, kprm)      |> qtop_U -> push!(qtops, qtop_U)
+    println("Last plaquette: $(plaqs[end])")
+    println("Last Q: $(qtops[end])")
+    # add reweighting factor
+    if(acc[end] == 0)
+        push!(reweight, reweight[end])
+    else
+        reweighting_factor(U, am0, prm, kprm, rprm) |> x -> push!(reweight, x)
+    end
+    # lambda_min, lambda_max = power_method(U, am0, prm, kprm)
+    # println("λ_min = $lambda_min, \nλ_max = $lambda_max")
 end

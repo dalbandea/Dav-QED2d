@@ -4,54 +4,6 @@ using Pkg
 Pkg.activate(".")
 using QED2d
 
-"""
-    power_method(U, am0)
-
-Given a gauge field `U` and a bare quark mass `am0`, return the maximum and
-minimum eigenvalues of D^†D.
-
-# Examples
-```jldocs
-lambda_min, lambda_max = power_method(U, am0)
-```
-"""
-function power_method(U, am0)
-
-    b = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2) # initial random fermionic field
-
-    shift = 2     # this shift helps convergence
-
-    # Apply recursively b = Ab.
-    # To help convergence, apply instead b = (A + shift) b = Ab + shift b.
-    # Then λ_max will be ⟨b|A|b⟩/⟨b|b⟩ - shift.
-    for i in 1:1000
-        b_aux = copy(b)
-        gamm5Dw_sqr(b_aux, U, b, am0, prm, kprm)
-        b_aux .= b_aux .+ shift*b
-        b = b_aux/CUDA.dot(b_aux,b_aux)
-    end
-    bnext = copy(b)
-    gamm5Dw_sqr(bnext, U, b, am0, prm, kprm)
-    bnext .= bnext .+ shift*b
-    lambda_max = CUDA.dot(b,bnext)/CUDA.dot(b,b) - shift
-
-    # Apply recursively b = (A-λ_max I) b = Ab - λ_max b
-    # Then λ_min will be ⟨b|A|b⟩/⟨b|b⟩ + λ_max
-    for i in 1:1000
-        b_last = copy(b)
-        gamm5Dw_sqr(b, U, b, am0, prm, kprm)
-        b .= b .- lambda_max*b_last
-        b = b/CUDA.dot(b,b)
-    end
-    bnext = copy(b)
-    gamm5Dw_sqr(bnext, U, b, am0, prm, kprm)
-    bnext .= bnext .- lambda_max*b
-    lambda_min = CUDA.dot(b,bnext)/CUDA.dot(b,b) + lambda_max
-
-    return lambda_min, lambda_max
-
-end
-
 # Lattice and Zolotarev parameters
 lsize = 40          # lattice size
 lbeta = 5.00        # beta
@@ -65,29 +17,21 @@ U = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[
 # U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)
 
 
-lambda_min, lambda_max = power_method(U, am0)   # Apply power method to extract
-                                                # maximum and minimum
-                                                # eigenvalues of D^†D
+lambda_min, lambda_max = power_method(U, am0, prm, kprm)    # Apply power method 
+                                                            # to extract maximum
+                                                            # and minimum
+                                                            # eigenvalues of
+                                                            # D^†D
 
 # Generate Zolotarev parameters
 r_a_rhmc = lambda_min |> real |> x->0.8*x |> sqrt  
-r_b_rhmc = lambda_max |> real |> x->1.2*x |> sqrt  # eps_rhmc is defined
+r_b_rhmc = lambda_max |> real |> x->1.2*x |> sqrt       # eps_rhmc is defined
                                                         # such that r_a and r_b
                                                         # are the sqrt of
                                                         # minimum and maximum
                                                         # eigenvalues of D^†D.
-eps_rhmc = ( r_a_rhmc/r_b_rhmc )^2
-mu_rhmc = Array{Float64}(undef, n_rhmc)
-nu_rhmc = Array{Float64}(undef, n_rhmc)
-rho_rhmc = Array{Float64}(undef, n_rhmc)
-A_rhmc = A(n_rhmc,eps_rhmc)
+rprm = get_rhmc_params(n_rhmc, r_a_rhmc, r_b_rhmc)
 
-for j in 1:n_rhmc
-    mu_rhmc[j] = mu(j,n_rhmc,eps_rhmc, r_b_rhmc)
-    nu_rhmc[j] = nu(j,n_rhmc,eps_rhmc, r_b_rhmc)
-    rho_rhmc[j] = rho_mu(j,1,n_rhmc,n_rhmc,eps_rhmc, r_b_rhmc)
-end
-rprm = RHMCParm(r_b_rhmc, n_rhmc, eps_rhmc, A_rhmc, rho_rhmc, mu_rhmc, nu_rhmc)
 
 
 # Generate random pseudofermionic field
@@ -105,7 +49,7 @@ CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(X_f, U, F, am0, prm)
 tmp2 = copy(X_f)
 CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(X_f, U, tmp2, am0, prm)
 deviation = X - X_f
-delta_rhmc = delta(n_rhmc, eps_rhmc) |> (x -> x*(2+x)) # maximum error
+delta_rhmc = delta(n_rhmc, rprm.eps) |> (x -> x*(2+x)) # maximum error
 delta_X = sqrt(CUDA.dot(deviation, deviation))/sqrt(CUDA.dot(X,X))
 # Se debe cumplir que delta_X ≤ delta_rhmc.
 real(delta_X) < delta_rhmc ? println("Test passed")  : println("Test not passed") 
@@ -146,7 +90,7 @@ end
 ZpX = copy(X)
 power = 3
 LuscherZp(ZpX,power,U,X,am0,rprm,prm,kprm)  # this returns ZᵖX in the first argument
-XZpX_code = CUDA.dot(X,ZpX) |> real         # It must hold that (X,ZᵖX) ≤ 2N(2δ)ᵖ
+XZpX_code = CUDA.dot(X,ZpX) |> real |> abs  # It must hold that (X,ZᵖX) ≤ 2N(2δ)ᵖ
 XZpX_teo = 2*prm.iL[1]*prm.iL[2]*(2*delta_rhmc)^power
 XZpX_code < XZpX_teo ? println("Test passed") : println("Test not passed")
 
@@ -163,6 +107,11 @@ for i in 1:5
     Tfactor *= (-1)*(2*i+1)/2/factorial(i+1)*factorial(i)
 end
 W1 = exp(res)   # if 2Nδ≤0.01, W₁ is expected to deviate from 1 at most by 1%
+
+
+# With function for general N
+
+reweighting_factor(U, am0, prm, kprm, rprm)
 
 
 ############## SCRIPT CHECKED UNTIL HERE ##################

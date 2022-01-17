@@ -20,6 +20,9 @@ struct RHMCParm
 	rho::Vector{Float64}
 	mu::Vector{Float64}
     nu::Vector{Float64}
+    delta::Float64
+    reweighting_N::Int64
+    reweighting_Taylor::Int64
 end
 export LattParm, KernelParm, RHMCParm
 
@@ -42,7 +45,7 @@ include("QED2dLoadSave.jl")
 export save_gauge, load_gauge
 
 include("QED2dRHMC.jl")
-export k, v, a_r, c_r, mu, nu, rho_mu, P, d, A, delta, error
+export k, v, a_r, c_r, mu, nu, rho_mu, P, d, A, delta, error, get_rhmc_params, power_method, reweighting_factor
 
 include("QED2dUtils.jl")
 export plwv

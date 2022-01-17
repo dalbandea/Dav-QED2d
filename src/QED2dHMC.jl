@@ -148,7 +148,7 @@ function HMC!(U, am0, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelP
     # contributions
     hfin = Hamiltonian(mom, U, prm, kprm) |> real
     for i in 1:rprm.n
-        # ξ = (D†D+μ²)⁻¹(D†D+ν²)ϕᵢ but reuse ξ in X
+        # ξᵢ = (D†D+μ²)⁻¹(D†D+ν²)ϕᵢ but reuse ξᵢ in X
         X = copy(F[i])
         tmp = copy(F[i])
         gamm5Dw_sqr_musq(X, tmp, U, F[i], am0, rprm.nu[i], prm, kprm)
