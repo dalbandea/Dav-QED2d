@@ -109,6 +109,16 @@ function get_rhmc_params(n_rhmc::Int64, r_a_rhmc, r_b_rhmc; reweighting_N::Int64
     return rprm
 end
 
+function get_rhmc_params(n_rhmc::Array, r_a_rhmc::Array, r_b_rhmc::Array; reweighting_N::Int64=1, reweighting_Taylor::Int64=5)
+
+    rprms = Array{RHMCParm}(undef,length(n_rhmc))
+
+    for j in 1:length(n_rhmc)
+        rprms[j] = get_rhmc_params(n_rhmc[j], r_a_rhmc[j], r_b_rhmc[j])
+    end
+
+    return rprms
+end
 
 
 """

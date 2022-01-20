@@ -1,0 +1,27 @@
+{
+    "Run": {
+	"user": "david",
+	"host": "prox15",
+	"name": "testrhmc_run", 
+	"seed": 1234
+    },
+    "Lattice": {
+	"size": [20, 20],
+	"beta": 5.0
+    },
+    "HMC": {
+	"tau": 1,
+	"ns": 100,
+    "nthm":  2000,
+    "ntraj": 2000,
+	"Qzero": false,
+    "fast_CG": true
+    },
+    "RHMC": {
+    "masses": [0.2, 0.2],
+    "n_rhmc": [5, 5],
+    "r_a":    [0.06, 0.06],
+    "r_b":    [20.0, 20.0]
+    }
+}
+

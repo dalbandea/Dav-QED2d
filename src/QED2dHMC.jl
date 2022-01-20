@@ -98,7 +98,8 @@ function HMC!(U, am0, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelP
 end
 
 
-#  HMC step for Nf=1 fermion (RHMC)
+#  HMC step for Nf=1 fermion (RHMC) 
+#  (deprecated, use HMC function for Nf non-degenerate fermions instead)
 function HMC!(U, am0, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::RHMCParm; qzero = false)
 
     Ucp = similar(U)
@@ -188,8 +189,8 @@ function HMC!(U, am0, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelP
     return nothing
 end
 
-# HMC step for Nf=2 non-degenerate (RHMC)
-function HMC!(U, am0::Array{Float64}, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm}; qzero = false)
+# HMC step for Nf=Nf non-degenerate (RHMC)
+function HMC!(U, am0::Array{Float64}, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm}; qzero = false, so_as_guess=false)
 
     Ucp = similar(U)
     Ucp .= U
@@ -200,12 +201,34 @@ function HMC!(U, am0::Array{Float64}, eps, ns, acc, CGmaxiter, tol, prm::LattPar
     # Initialize initial Hamiltonian
     hini = Hamiltonian(mom, U, prm, kprm) |> real
 
-    # Initialize array of pseudofermion fields, X and γDX
+    # Initialize array of pseudofermion fields
     F = Array{Array{CUDA.CuArray}}(undef, length(am0))
     for j in 1:length(am0)
         F[j] = Array{CUDA.CuArray}(undef, rprm[j].n)
     end
-    X = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)
+    # Initialize array of X.
+    # If so_as_guess=true, X occupies more memory, but faster in CG;
+    # If false, all elements point to the same object: save memory, but slower
+    # in CG
+    if(so_as_guess == true) 
+        X = Array{Array{CUDA.CuArray}}(undef, length(am0))
+        for j in 1:length(am0)
+            X[j] = Array{CUDA.CuArray}(undef, rprm[j].n)
+            for i in 1:rprm[j].n
+                X[j][i] = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)
+            end
+        end
+    else
+        X_reused = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)
+        X = Array{Array{CUDA.CuArray}}(undef, length(am0))
+        for j in 1:length(am0)
+            X[j] = Array{CUDA.CuArray}(undef, rprm[j].n)
+            for i in 1:rprm[j].n
+                X[j][i] = X_reused  # the two objects are the same
+            end
+        end
+    end
+    # Initialize g5DX
     g5DX = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)
 
     # Fill array of pseudofermion fields for each fermion
@@ -216,16 +239,16 @@ function HMC!(U, am0::Array{Float64}, eps, ns, acc, CGmaxiter, tol, prm::LattPar
         # ϕᵢ = (γD + iν)⁻¹(γD + iμ) Xᵢ  if Xᵢ is random normal. X is reused
         for i in 1:rprm[j].n
             # Generate random Xᵢ
-            X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2)
-            hini += CUDA.dot(X,X) |> real
+            X[j][i] .= (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2)
+            hini += CUDA.dot(X[j][i],X[j][i]) |> real
             
             # Initialize pseudofermion field ϕᵢ and obtain it from Xᵢ
             F[j][i] = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)
             # ϕᵢ = (γD+iμ)X
             CUDA.@sync begin
-                CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F[j][i], U, X, am0[j], prm)
+                CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F[j][i], U, X[j][i], am0[j], prm)
             end
-            F[j][i] .= F[j][i] .+ im*rprm[j].mu[i] .* X
+            F[j][i] .= F[j][i] .+ im*rprm[j].mu[i] .* X[j][i]
             # ϕᵢ = (D†D+ν²)⁻¹ϕᵢ
             aux_F = copy(F[j][i])
             CG(F[j][i], U, aux_F, am0[j], rprm[j].nu[i], CGmaxiter, tol, gamm5Dw_sqr_musq, prm, kprm)
@@ -239,7 +262,7 @@ function HMC!(U, am0::Array{Float64}, eps, ns, acc, CGmaxiter, tol, prm::LattPar
     end
 
     # OMF4!(mom, U, X, F, g5DX, am0,  eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::RHMCParm)
-    leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm)
+    leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm, so_as_guess=so_as_guess)
     
     # Initialize final Hamiltonian and complete it with pseudofermion
     # contributions
@@ -573,11 +596,13 @@ function update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::La
 end
 
 
-# leapfrog for Nf=1 fermions
+# leapfrog for Nf=1 fermions (deprecated)
 function leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::RHMCParm)
 
+    iter = 0    # number of CG iterations
+
 	# First half-step for momenta
-	update_momenta!(mom, U, X, F, g5DX, am0, 0.5*eps, ns, CGmaxiter, tol, prm, kprm, rprm)
+	iter += update_momenta!(mom, U, X, F, g5DX, am0, 0.5*eps, ns, CGmaxiter, tol, prm, kprm, rprm)
 
 	# ns-1 steps
 	for i in 1:(ns-1) 
@@ -586,7 +611,7 @@ function leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattPa
 		    CUDA.@cuda threads=kprm.threads blocks=kprm.blocks updt_fld!(U, mom, eps)         
 		end
 		#Update momenta
-		update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm, kprm, rprm)
+		iter += update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm, kprm, rprm)
 	end
 	# Last update for gauge links
         CUDA.@sync begin
@@ -594,12 +619,15 @@ function leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattPa
         end
 
 	# Last half-step for momenta
-	update_momenta!(mom, U, X, F, g5DX, am0, 0.5*eps, ns, CGmaxiter, tol, prm, kprm, rprm)
+	iter += update_momenta!(mom, U, X, F, g5DX, am0, 0.5*eps, ns, CGmaxiter, tol, prm, kprm, rprm)
+
+
+    println("Iterations: $iter")
 
 	return nothing
 end
 
-# update_momenta for Nf=1 fermions
+# update_momenta for Nf=1 fermions (deprecated)
 function update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::LattParm, kprm::KernelParm, rprm::RHMCParm)
 	# frc1 and frc2 will be for the gauge part of the force, 
     # frc_i will hold the force of the pseudofermion ϕᵢ
@@ -609,9 +637,11 @@ function update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::La
 	frc_i = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)
 	frc = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)
 
+    iter = 0    # number of CG iterations
+
     for i in 1:rprm.n
         # X = (D†D+μ²)⁻¹ϕᵢ
-        iter = CG(X, U, F[i], am0, rprm.mu[i], maxiter, tol, gamm5Dw_sqr_musq, prm, kprm)
+        iter += CG(X, U, F[i], am0, rprm.mu[i], maxiter, tol, gamm5Dw_sqr_musq, prm, kprm, so_as_guess)
 
         # Apply γD to X
         CUDA.@sync begin
@@ -633,14 +663,16 @@ function update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::La
 	# Final force is frc1+frc2+frc
     mom .= mom .+ (eps).*(frc1.+frc2.+frc)
 
-	return nothing
+	return iter
 end
 
-# leapfrog for Nf=2 non-degenerate fermions (RHMC)
-function leapfrog!(mom, U, X, F, g5DX, am0::Array{Float64}, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm})
+# leapfrog for Nf=Nf non-degenerate fermions (RHMC)
+function leapfrog!(mom, U, X, F, g5DX, am0::Array{Float64}, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm}; so_as_guess::Bool=false)
+
+    iter = 0
 
 	# First half-step for momenta
-	update_momenta!(mom, U, X, F, g5DX, am0, 0.5*eps, ns, CGmaxiter, tol, prm, kprm, rprm)
+	iter += update_momenta!(mom, U, X, F, g5DX, am0, 0.5*eps, ns, CGmaxiter, tol, prm, kprm, rprm)
 
 	# ns-1 steps
 	for i in 1:(ns-1) 
@@ -649,21 +681,21 @@ function leapfrog!(mom, U, X, F, g5DX, am0::Array{Float64}, eps, ns, CGmaxiter, 
 		    CUDA.@cuda threads=kprm.threads blocks=kprm.blocks updt_fld!(U, mom, eps)         
 		end
 		#Update momenta
-		update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm, kprm, rprm)
+		iter += update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm, kprm, rprm, so_as_guess=so_as_guess)
 	end
 	# Last update for gauge links
-        CUDA.@sync begin
-            CUDA.@cuda threads=kprm.threads blocks=kprm.blocks updt_fld!(U, mom, eps)         
-        end
+    CUDA.@sync begin
+        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks updt_fld!(U, mom, eps)
+    end
 
 	# Last half-step for momenta
-	update_momenta!(mom, U, X, F, g5DX, am0, 0.5*eps, ns, CGmaxiter, tol, prm, kprm, rprm)
+	iter += update_momenta!(mom, U, X, F, g5DX, am0, 0.5*eps, ns, CGmaxiter, tol, prm, kprm, rprm)
 
 	return nothing
 end
 
-# update_momenta for Nf=2 non-degenerate fermions (RHMC)
-function update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm})
+# update_momenta for Nf=Nf non-degenerate fermions (RHMC)
+function update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm}; so_as_guess::Bool=false)
 	# frc1 and frc2 will be for the gauge part of the force, 
     # frc_i will hold the force of the pseudofermion ϕᵢ of fermion j
 	# frc = ∑ⱼ ∑ᵢ frc_i
@@ -672,19 +704,21 @@ function update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::La
 	frc_i = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)
 	frc = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)
 
+    iter = 0
+
     for j in 1:length(am0)
         for i in 1:rprm[j].n
             # X = (D†D+μ²)⁻¹ϕᵢ
-            iter = CG(X, U, F[j][i], am0[j], rprm[j].mu[i], maxiter, tol, gamm5Dw_sqr_musq, prm, kprm)
+            iter += CG(X[j][i], U, F[j][i], am0[j], rprm[j].mu[i], maxiter, tol, gamm5Dw_sqr_musq, prm, kprm, so_as_guess=so_as_guess)
 
             # Apply γD to X
             CUDA.@sync begin
-                CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(g5DX, U, X, am0[j], prm)
+                CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(g5DX, U, X[j][i], am0[j], prm)
             end
             
             # Get fermion part of the force in frc_i
             CUDA.@sync begin
-                    CUDA.@cuda threads=kprm.threads blocks=kprm.blocks tr_dQwdU(frc_i, U, X, g5DX, prm)
+                CUDA.@cuda threads=kprm.threads blocks=kprm.blocks tr_dQwdU(frc_i, U, X[j][i], g5DX, prm)
             end
             frc .= frc .+ (rprm[j].nu[i]^2-rprm[j].mu[i]^2)*frc_i
         end
@@ -698,5 +732,5 @@ function update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::La
 	# Final force is frc1+frc2+frc
     mom .= mom .+ (eps).*(frc1.+frc2.+frc)
 
-	return nothing
+	return iter
 end

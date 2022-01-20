@@ -46,22 +46,35 @@ function CG(so, U, si, am0, maxiter, eps, A, prm::LattParm, kprm::KernelParm)
 end
 
 
-function CG(so, U, si, am0, mu_mass, maxiter, eps, A, prm::LattParm, kprm::KernelParm)
+function CG(so, U, si, am0, mu_mass, maxiter, eps, A, prm::LattParm, kprm::KernelParm; so_as_guess::Bool=false)
 
     r  = similar(si)
     p  = similar(si)
     Ap = similar(si)
     tmp = similar(si)
     
-    so .= complex(0.0,0.0)
-    r  .= si
-    p  .= si
-    norm = CUDA.mapreduce(x -> abs2(x), +, si)
+    tol = eps * CUDA.mapreduce(x -> abs2(x), +, si)
+
+    if(so_as_guess == false)
+        so .= complex(0.0,0.0)
+
+        r  .= si
+        p  .= si
+        norm = CUDA.mapreduce(x -> abs2(x), +, si)
+    else
+        A(Ap, tmp, U, so, am0, mu_mass, prm, kprm)
+        r  .= si - Ap
+        p  .= r
+        norm = CUDA.mapreduce(x -> abs2(x), +, r)
+        if norm < tol
+            return 0
+        end
+    end
+
     err = 0.0
     
-    tol = eps * norm
-	    # println( tol)
-	    iterations = 0
+    # println( tol)
+    iterations = 0
     for i in 1:maxiter
         A(Ap, tmp, U, p, am0, mu_mass, prm, kprm)
         prod  = CUDA.dot(p, Ap)
@@ -85,7 +98,7 @@ function CG(so, U, si, am0, mu_mass, maxiter, eps, A, prm::LattParm, kprm::Kerne
 
     if err > tol
 	    println(err)
-	    error("CG not converged after $maxiter iterationss")
+	    Base.error("CG not converged after $maxiter iterationss")
     end
     
     return iterations

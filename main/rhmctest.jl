@@ -1,4 +1,6 @@
-using CUDA, Logging, StructArrays, Random, DelimitedFiles, Elliptic, Elliptic.Jacobi, LinearAlgebra
+# using CUDA, Logging, StructArrays, Random, DelimitedFiles, Elliptic, Elliptic.Jacobi, LinearAlgebra
+using CUDA, Logging, StructArrays, Random, DelimitedFiles, LinearAlgebra
+import Elliptic, Elliptic.Jacobi
 using Revise
 using Pkg
 Pkg.activate(".")
@@ -7,7 +9,7 @@ using QED2d
 # Lattice and Zolotarev parameters
 lsize = 20          # lattice size
 lbeta = 5.00        # beta
-am0 = [0.2,0.2]           # bare mass
+am0 = 0.2           # bare mass
 read_from = 0
 
 
@@ -31,8 +33,8 @@ lambda_min, lambda_max = power_method(U, am0, prm, kprm)    # Apply power method
 # Generate Zolotarev parameters
 n_rhmc = 5                                              # number of Zolotarev
                                                         # monomial pairs
-r_a_rhmc = 0.06 |> real |> x->x*0.6 |> sqrt  
-r_b_rhmc = 20.0 |> real |> x->x*1.4 |> sqrt       # eps_rhmc is defined
+r_a_rhmc = 0.06 |> real |> x->x*1.0 |> sqrt  
+r_b_rhmc = 20.0 |> real |> x->x*1.0 |> sqrt             # eps_rhmc is defined
                                                         # such that r_a and r_b
                                                         # are the sqrt of
                                                         # minimum and maximum
@@ -50,14 +52,14 @@ epsilon = 1.0/nsteps
 CGmaxiter = 10000
 CGtol = 1e-16
 
-@time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false)
+@time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false, so_as_guess=true)
 
-for i in 1:2
-    @time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false)
+for i in 1:5
+    @time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false, so_as_guess=true)
     Plaquette(U, prm, kprm) |> plaq_U -> push!(plaqs, plaq_U)
 	Qtop(U, prm, kprm)      |> qtop_U -> push!(qtops, qtop_U)
-    println("Last plaquette: $(plaqs[end])")
-    println("Last Q: $(qtops[end])")
+    # println("Last plaquette: $(plaqs[end])")
+    # println("Last Q: $(qtops[end])")
     # add reweighting factor
     if(acc[end] == 0)
         push!(reweight, reweight[end])
