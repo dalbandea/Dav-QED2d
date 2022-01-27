@@ -30,7 +30,7 @@ include("QED2dAction.jl")
 export plaquette!, qtop!, updt_fld!, krnl_force!
 
 include("QED2dHMC.jl")
-export HMC!, Hamiltonian, Action, Plaquette, Qtop, OMF4!, leapgrog!, update_momenta!, HMC_test!
+export HMC!, Hamiltonian, Action, Plaquette, Qtop, OMF4!, leapgrog!, update_momenta!
 
 include("QED2dFields.jl")
 export unfold_fld!, unfold_reflect!

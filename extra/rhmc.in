@@ -2,7 +2,7 @@
     "Run": {
 	"user": "david",
 	"host": "prox15",
-	"name": "testrhmc_run", 
+	"name": "testrhmc_run2", 
 	"seed": 1234
     },
     "Lattice": {
@@ -14,8 +14,7 @@
 	"ns": 100,
     "nthm":  2000,
     "ntraj": 2000,
-	"Qzero": false,
-    "fast_CG": true
+	"Qzero": false
     },
     "RHMC": {
     "masses": [0.2, 0.2],

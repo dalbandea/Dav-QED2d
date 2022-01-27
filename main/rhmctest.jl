@@ -39,7 +39,7 @@ r_b_rhmc = 20.0 |> real |> x->x*1.0 |> sqrt             # eps_rhmc is defined
                                                         # are the sqrt of
                                                         # minimum and maximum
                                                         # eigenvalues of D^†D.
-rprm = get_rhmc_params(n_rhmc, r_a_rhmc, r_b_rhmc)
+rprm = get_rhmc_params([n_rhmc], [r_a_rhmc], [r_b_rhmc])
 
 acc = Vector{Int64}()
 reweight = Vector{Float64}()
@@ -52,10 +52,11 @@ epsilon = 1.0/nsteps
 CGmaxiter = 10000
 CGtol = 1e-16
 
-@time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false, so_as_guess=true)
+
+@time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false)
 
 for i in 1:5
-    @time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false, so_as_guess=true)
+    @time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false)
     Plaquette(U, prm, kprm) |> plaq_U -> push!(plaqs, plaq_U)
 	Qtop(U, prm, kprm)      |> qtop_U -> push!(qtops, qtop_U)
     # println("Last plaquette: $(plaqs[end])")

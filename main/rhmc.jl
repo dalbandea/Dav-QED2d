@@ -1,4 +1,4 @@
-using CUDA, Logging, StructArrays, Random, DelimitedFiles, LinearAlgebra, BDIO, JSON
+using CUDA, Logging, StructArrays, Random, DelimitedFiles, LinearAlgebra, BDIO, JSON, ArgParse
 import Elliptic, Elliptic.Jacobi
 using Revise
 using Pkg
@@ -38,7 +38,6 @@ function read_options(fname)
     nthermalize     = s["HMC"]["nthm"]
     ntraj           = s["HMC"]["ntraj"]
     qzero           = s["HMC"]["Qzero"]
-    so_as_guess     = s["HMC"]["fast_CG"]
 
     am0             = s["RHMC"]["masses"]
     am0 = convert(Array{Float64},am0)
@@ -66,13 +65,13 @@ function read_options(fname)
     BDIO_write!(fb, dfoo)
     BDIO_write_hash!(fb)
     
-    return tau, nsteps, nthermalize, ntraj, lsize, beta, am0, n_rhmc, r_a_rhmc, r_b_rhmc, qzero, so_as_guess, fb
+    return tau, nsteps, nthermalize, ntraj, lsize, beta, am0, n_rhmc, r_a_rhmc, r_b_rhmc, qzero, fb
 end
 
 parsed_args = parse_commandline()
 infile = parsed_args["i"]
 
-tau, nsteps, nthermalize, ntraj, lsize, beta, am0, n_rhmc, r_a_rhmc, r_b_rhmc, qzero, so_as_guess, fb = read_options(infile)
+tau, nsteps, nthermalize, ntraj, lsize, beta, am0, n_rhmc, r_a_rhmc, r_b_rhmc, qzero, fb = read_options(infile)
 
 BDIO_close!(fb)
 
@@ -92,10 +91,10 @@ epsilon = tau/nsteps
 CGmaxiter = 10000
 CGtol = 1e-16
 
-@time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false, so_as_guess=so_as_guess)
+@time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false)
 
-for i in 1:ntraj
-    @time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false, so_as_guess=so_as_guess)
+for i in 1:2
+    @time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false)
     Plaquette(U, prm, kprm) |> plaq_U -> push!(plaqs, plaq_U)
 	Qtop(U, prm, kprm)      |> qtop_U -> push!(qtops, qtop_U)
     # println("Last plaquette: $(plaqs[end])")
