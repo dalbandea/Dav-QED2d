@@ -116,32 +116,14 @@ function HMC!(U, am0::Array, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::
     g5DX = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)
 
     # Fill array of N_fermions pseudofermion fields and complete initial Hamiltonian
-    # S_pf =  ϕ† ∏( (D†D + μᵢ²)⁻¹ (D†D + νᵢ²) ) ϕ = X† X
-    # ϕ = ∏( (γD + iνᵢ)⁻¹(γD + iμᵢ) ) X  if X is random normal.
     for j in 1:N_fermions
         # Generate random Xⱼ
         X .= (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2)
+        F[j] = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)
         hini += CUDA.mapreduce(x -> abs2(x), +, X)
         
         # Initialize pseudofermion field ϕⱼ and obtain it from X
-        F[j] = copy(X)
-        for i in 1:rprm[j].n
-            # ϕⱼ = (γD+iμ)X = (γD+iμ)ϕⱼ
-            aux_F = copy(F[j])
-            CUDA.@sync begin
-                CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F[j], U, aux_F, am0[j], prm)
-            end
-            F[j] .= F[j] .+ im*rprm[j].mu[i] .* aux_F
-            # ϕⱼ = (D†D+ν²)⁻¹ϕⱼ
-            aux_F .= F[j]
-            CG(F[j], U, aux_F, am0[j], rprm[j].nu[i], CGmaxiter, tol, gamm5Dw_sqr_musq, prm, kprm)
-            # ϕⱼ = (γD-iν)ϕⱼ
-            aux_F .= F[j]
-            CUDA.@sync begin
-                CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F[j], U, aux_F, am0[j], prm)
-            end
-            F[j] .= F[j] .- im*rprm[j].nu[i] .* aux_F
-        end
+        generate_pseudofermion!(F[j], U, X, am0[j], CGmaxiter, tol, prm, kprm, rprm[j])
     end
 
     # OMF4!(mom, U, X, F, g5DX, am0,  eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::RHMCParm)

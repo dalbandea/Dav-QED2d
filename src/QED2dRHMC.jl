@@ -293,6 +293,8 @@ end
 Obtain pseudofermion from a random field `X` given the RHMC parameters `rprm`. Equivalent to ``A_{k,l}`` operator in Lüscher eq. (3.8).
 """
 function generate_pseudofermion!(F, U, X, am0, CGmaxiter, CGtol, prm, kprm, rprm)
+    # S_pf =  ϕ† ∏( (D†D + μᵢ²)⁻¹ (D†D + νᵢ²) ) ϕ = X† X
+    # ϕ = ∏( (γD + iνᵢ)⁻¹(γD + iμᵢ) ) X  if X is random normal.
     F .= X
     for i in 1:rprm.n
         # ϕⱼ = (γD+iμ)X = (γD+iμ)ϕⱼ
