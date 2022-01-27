@@ -176,9 +176,9 @@ function LuscherZp(Z, p::Int64, U, X_in, am0, rprm::RHMCParm, prm::LattParm, kpr
 
     function LuscherZ(Z, U, X_in, am0, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)
         # Z = D†DR² X_in
-        MultiCG(Z, U, X_in, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
+        R(Z, U, X_in, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
         tmp = copy(Z)
-        MultiCG(Z, U, tmp, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
+        R(Z, U, tmp, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
         tmp .= Z
         CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(Z, U, tmp, am0, prm)
         tmp .= Z
@@ -245,4 +245,43 @@ function reweighting_factor(U, am0::Array{Float64}, prm::LattParm, kprm::KernelP
 
     return total_W_N
 
+end
+
+
+
+"""
+    R(so, U, si, am0, maxiter, eps, A, rprm, prm, kprm)
+
+Applies rational approximation ``R(A) = A^{-1/2}`` to the field `si`, storing it
+in `so`, with `A` an operator.
+"""
+function R(so, U, si, am0, maxiter, eps, A, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)
+	aux = similar(so)
+	so .= si  # this accounts for identity in partial fraction descomposition
+	for j in 1:rprm.n
+		CG(aux, U, si, am0, rprm.mu[j], maxiter, eps, A, prm, kprm)
+		so .= so .+ rprm.rho[j]*aux
+	end
+	so .= rprm.r_b^(-1) * rprm.A * so
+
+    return nothing
+end
+
+"""
+    MultiCG(so, U, si, am0, maxiter, eps, A, rprm, prm, kprm)
+
+Applies the partial fraction decomposition of  rational approximation ``R(A) =
+A^{-1/2}`` without constant factors (as opposed to function `R`) to the field
+`si`, storing it in `so`, with `A` an operator. Used for pseudofermion-field
+generation, see Luscher eq. (3.9)
+"""
+function MultiCG(so, U, si, am0, maxiter, eps, A, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)
+	aux = similar(so)
+	so .= si  # this accounts for identity in partial fraction descomposition
+	for j in 1:rprm.n
+		CG(aux, U, si, am0, rprm.mu[j], maxiter, eps, A, prm, kprm)
+		so .= so .+ rprm.rho[j]*aux
+	end
+
+    return nothing
 end

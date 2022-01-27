@@ -30,7 +30,7 @@ include("QED2dAction.jl")
 export plaquette!, qtop!, updt_fld!, krnl_force!
 
 include("QED2dHMC.jl")
-export HMC!, Hamiltonian, Action, Plaquette, Qtop, OMF4!, leapgrog!, update_momenta!
+export HMC!, Hamiltonian, Action, Plaquette, Qtop, OMF4!, leapgrog!, update_momenta!, HMC_test!
 
 include("QED2dFields.jl")
 export unfold_fld!, unfold_reflect!
@@ -39,13 +39,13 @@ include("QED2dDirac.jl")
 export gamm5Dw, gamm5Dw_sqr, gamm5Dw_sqr_msq, tr_dQwdU, gamm5Dw_sqr_musq, gamm5Dw_sqr_sqr_musq, gamm5Dw_sqr_sqr, gamm5, Dw
 
 include("QED2dSolver.jl")
-export CG, MultiCG
+export CG
 
 include("QED2dLoadSave.jl")
 export save_gauge, load_gauge
 
 include("QED2dRHMC.jl")
-export k, v, a_r, c_r, mu, nu, rho_mu, P, d, A, delta, error, get_rhmc_params, power_method, reweighting_factor
+export k, v, a_r, c_r, mu, nu, rho_mu, P, d, A, delta, error, get_rhmc_params, power_method, reweighting_factor, R, MultiCG
 
 include("QED2dUtils.jl")
 export plwv
