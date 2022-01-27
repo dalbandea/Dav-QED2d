@@ -41,9 +41,9 @@ F = CUDA.zeros(ComplexF64,prm.iL[1], prm.iL[2], 2)
 
 
 # Apply X - D†DR²X test (see Luscher rhmc ec. 4.3)
-MultiCG(F, U, X, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
+R(F, U, X, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
 tmp = copy(F)
-MultiCG(F, U, tmp, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
+R(F, U, tmp, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
 X_f = similar(X)
 CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(X_f, U, F, am0, prm)
 tmp2 = copy(X_f)
@@ -64,9 +64,9 @@ function LuscherZp(Z, p::Int64, U, X_in, am0, rprm::RHMCParm, prm::LattParm, kpr
 
     function LuscherZ(Z, U, X_in, am0, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)
         # Z = D†DR² X_in
-        MultiCG(Z, U, X_in, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
+        R(Z, U, X_in, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
         tmp = copy(Z)
-        MultiCG(Z, U, tmp, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
+        R(Z, U, tmp, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
         tmp .= Z
         CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(Z, U, tmp, am0, prm)
         tmp .= Z

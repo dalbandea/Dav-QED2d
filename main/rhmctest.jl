@@ -9,7 +9,7 @@ using QED2d
 # Lattice and Zolotarev parameters
 lsize = 20          # lattice size
 lbeta = 5.00        # beta
-am0 = 0.2           # bare mass
+am0 = [0.2]         # bare mass
 read_from = 0
 
 
