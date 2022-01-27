@@ -285,3 +285,31 @@ function MultiCG(so, U, si, am0, maxiter, eps, A, rprm::RHMCParm, prm::LattParm,
 
     return nothing
 end
+
+
+"""
+    generate_pseudofermion(F, U, X, am0, CGmaxiter, CGtol, prm, kprm, rprm)
+
+Obtain pseudofermion from a random field `X` given the RHMC parameters `rprm`. Equivalent to ``A_{k,l}`` operator in Lüscher eq. (3.8).
+"""
+function generate_pseudofermion!(F, U, X, am0, CGmaxiter, CGtol, prm, kprm, rprm)
+    F .= X
+    for i in 1:rprm.n
+        # ϕⱼ = (γD+iμ)X = (γD+iμ)ϕⱼ
+        aux_F = copy(F)
+        CUDA.@sync begin
+            CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F, U, aux_F, am0, prm)
+        end
+        F .= F .+ im*rprm.mu[i] .* aux_F
+        # ϕⱼ = (D†D+ν²)⁻¹ϕⱼ
+        aux_F .= F
+        CG(F, U, aux_F, am0, rprm.nu[i], CGmaxiter, CGtol, gamm5Dw_sqr_musq, prm, kprm)
+        # ϕⱼ = (γD-iν)ϕⱼ
+        aux_F .= F
+        CUDA.@sync begin
+            CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F, U, aux_F, am0, prm)
+        end
+        F .= F .- im*rprm.nu[i] .* aux_F
+    end
+end
+
