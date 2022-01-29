@@ -98,7 +98,7 @@ function HMC!(U, am0, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelP
 end
 
 # RHMC with 1 pseudofermion field for fermion
-function HMC!(U, am0::Array, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm}; qzero = false)
+function HMC!(U, am0::Array, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm}; qzero = false, reversibility_test = false)
 
     Ucp = similar(U)
     Ucp .= U
@@ -140,6 +140,13 @@ function HMC!(U, am0::Array, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::
     end
     
 
+    if reversibility_test
+        mom .= -mom
+        leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm)
+
+        return nothing
+    end
+
     if qzero
         if abs(Qtop(U, prm, kprm)) > 0.1
             pacc = 0.0
@@ -149,7 +156,7 @@ function HMC!(U, am0::Array, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::
     else
         pacc = exp(-(hfin-hini))
     end
-    
+
     if (pacc < 1.0)
         r = rand()
         if (pacc > r) 

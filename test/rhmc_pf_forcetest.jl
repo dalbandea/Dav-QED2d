@@ -45,7 +45,7 @@ Sini = CUDA.dot(X,X)
 
 # Get pseudofermion field
 CGmaxiter=10000
-CGtol=1e-16
+CGtol=1e-25
 generate_pseudofermion!(F, U, X, am0, CGmaxiter, CGtol, prm, kprm, rprm)
 
 # Compute the analytical force
@@ -89,4 +89,5 @@ Sfin = CUDA.dot(xi,F)
 # Compute numerical force
 F_num = (Sfin - Sini)/Deps
 
+println("ΔF =  $(Frc_i + F_num |> abs)") 
 @test Frc_i+F_num |> abs < 1e-5

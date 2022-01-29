@@ -5,7 +5,7 @@ Pkg.activate(".")
 using QED2d
 
 # Lattice and Zolotarev parameters
-lsize = 40          # lattice size
+lsize = 20          # lattice size
 lbeta = 5.00        # beta
 am0 = 10.0          # bare mass
 n_rhmc = 5          # number of Zolotarev monomial pairs
