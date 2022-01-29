@@ -1,10 +1,9 @@
 # using CUDA, Logging, StructArrays, Random, DelimitedFiles, Elliptic, Elliptic.Jacobi, LinearAlgebra
-using CUDA, Logging, StructArrays, Random, DelimitedFiles, LinearAlgebra
-import Elliptic, Elliptic.Jacobi
 using Revise
 using Pkg
 Pkg.activate(".")
 using QED2d
+using CUDA, Logging, StructArrays, Random, DelimitedFiles, LinearAlgebra
 
 # Lattice and Zolotarev parameters
 lsize = 20          # lattice size

@@ -119,10 +119,10 @@ function HMC!(U, am0::Array, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::
     for j in 1:N_fermions
         # Generate random Xⱼ
         X .= (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2)
-        F[j] = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)
         hini += CUDA.mapreduce(x -> abs2(x), +, X)
         
         # Initialize pseudofermion field ϕⱼ and obtain it from X
+        F[j] = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)
         generate_pseudofermion!(F[j], U, X, am0[j], CGmaxiter, tol, prm, kprm, rprm[j])
     end
 

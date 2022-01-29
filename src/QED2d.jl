@@ -1,6 +1,6 @@
 module QED2d
 
-import CUDA, DelimitedFiles, Elliptic, Elliptic.Jacobi, LinearAlgebra
+import CUDA, DelimitedFiles, Elliptic, Elliptic.Jacobi
 
 struct LattParm
     iL::Tuple{Int64,Int64}
