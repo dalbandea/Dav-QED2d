@@ -2,7 +2,7 @@
     "Run": {
 	"user": "david",
 	"host": "prox15",
-	"name": "testrhmc_run2", 
+	"name": "testrhmc_run3", 
 	"seed": 1234
     },
     "Lattice": {
@@ -10,17 +10,17 @@
 	"beta": 5.0
     },
     "HMC": {
-	"tau": 1,
-	"ns": 100,
-    "nthm":  2000,
-    "ntraj": 2000,
-	"Qzero": false
+	"tau":      1,
+	"ns":       100,
+    "nthm":     1000,
+    "ntraj":    1000,
+	"Qzero":    false
     },
     "RHMC": {
-    "masses": [0.2, 0.2],
-    "n_rhmc": [5, 5],
-    "r_a":    [0.06, 0.06],
-    "r_b":    [20.0, 20.0]
+    "masses":       [0.2, 0.2],
+    "n_rhmc":       [4, 4],
+    "r_a_g5Dw_sqr": [0.05, 0.05],
+    "r_b_g5Dw_sqr": [20.0, 20.0]
     }
 }
 
