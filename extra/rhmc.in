@@ -3,7 +3,7 @@
 	"user": "david",
 	"host": "prox15",
 	"name": "testrhmc_run3", 
-	"seed": 1234
+	"seed": 0
     },
     "Lattice": {
 	"size": [20, 20],
