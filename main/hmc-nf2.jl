@@ -47,13 +47,8 @@ function read_options(fname)
     nthermalize     = s["HMC"]["nthm"]
     ntraj           = s["HMC"]["ntraj"]
     qzero           = s["HMC"]["Qzero"]
+    am0             = s["HMC"]["mass"]
 
-    am0             = s["RHMC"]["masses"]
-    am0             = convert(Array{Float64},am0)
-    n_rhmc          = s["RHMC"]["n_rhmc"]
-    r_a_rhmc        = s["RHMC"]["r_a_g5Dw_sqr"] .|> sqrt
-    r_b_rhmc        = s["RHMC"]["r_b_g5Dw_sqr"] .|> sqrt
-    
     lsize       = Vector{Int64}(undef, 2)
     lsize[1]    = s["Lattice"]["size"][1]
     lsize[2]    = s["Lattice"]["size"][2]
@@ -75,7 +70,7 @@ function read_options(fname)
     BDIO_write!(fb, dfoo)
     BDIO_write_hash!(fb)
     
-    return tau, nsteps, nthermalize, ntraj, lsize, beta, am0, n_rhmc, r_a_rhmc, r_b_rhmc, qzero, fb
+    return tau, nsteps, nthermalize, ntraj, lsize, beta, am0, qzero, fb
 end
 
 parsed_args = parse_commandline()
@@ -83,7 +78,7 @@ infile          = parsed_args["i"]
 savedir         = parsed_args["savedir"]
 continue_from   = parsed_args["cont"]
 
-tau, nsteps, nthermalize, ntraj, lsize, beta, am0, n_rhmc, r_a_rhmc, r_b_rhmc, qzero, fb = read_options(infile)
+tau, nsteps, nthermalize, ntraj, lsize, beta, am0, qzero, fb = read_options(infile)
 
 BDIO_close!(fb)
 
@@ -92,13 +87,10 @@ global kprm = KernelParm((lsize[1], 1), (1,lsize[2]))
 
 U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)
 if continue_from != 0
-    load_gauge(U, savedir*"config_$(prm.iL[1])_$(prm.iL[2])_b$(prm.beta)_m$(am0[1])_n$(continue_from)", prm)
+    load_gauge(U, savedir*"configs/config_$(prm.iL[1])_$(prm.iL[2])_b$(prm.beta)_m$(am0)_n$(continue_from)", prm)
 end
 
-rprm = get_rhmc_params(n_rhmc, r_a_rhmc, r_b_rhmc)
-
 acc = Vector{Int64}()
-reweight = Vector{Float64}()
 plaqs = Vector{Float64}()
 qtops = Vector{Float64}()
 
@@ -106,36 +98,28 @@ epsilon = tau/nsteps
 CGmaxiter = 10000
 CGtol = 1e-16
 
-file_stat = "statistics.txt"
+file_stat = savedir*"statistics-hmc-nf2.txt"
 io_stat = open(file_stat, "a")
 write(io_stat, "step,accepted,")
-write(io_stat, "plaquette,top_charge,reweight_factor,")
-write(io_stat, "lambda_min,lambda_max,acc_rate\n")
+write(io_stat, "plaquette,top_charge,")
+write(io_stat, "acc_rate\n")
 close(io_stat)
 
 for i in (1 + continue_from):(ntraj + continue_from)
-    @time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, rprm, qzero=false)
+    @time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, qzero=false)
     Plaquette(U, prm, kprm) |> plaq_U -> push!(plaqs, plaq_U)
 	Qtop(U, prm, kprm)      |> qtop_U -> push!(qtops, qtop_U)
-    # println("Last plaquette: $(plaqs[end])")
-    # println("Last Q: $(qtops[end])")
     # add reweighting factor
-    if acc[end] == 0
-        push!(reweight, reweight[end])
-    else
-        reweighting_factor(U, am0, CGmaxiter, CGtol, prm, kprm, rprm) |> x -> push!(reweight, x)
-    end
-    lambda_min, lambda_max = power_method(U, am0[1], prm, kprm, iter=5000) .|> real
-    # println("λ_min = $lambda_min, \nλ_max = $lambda_max")
-    
+
     global io_stat = open(file_stat, "a")
     write(io_stat, "$i,$(acc[end]),")
-    write(io_stat, "$(plaqs[end]),$(qtops[end]),$(reweight[end]),")
-    write(io_stat, "$lambda_min,$lambda_max,$(mean(acc))\n")
+    write(io_stat, "$(plaqs[end]),$(qtops[end]),")
+    write(io_stat, "$(mean(acc))\n")
     close(io_stat)
 
     if i % 100 == 0
-        gauge_file = savedir*"config_$(prm.iL[1])_$(prm.iL[2])_b$(prm.beta)_m$(am0[1])_n$(i)"
+        gauge_file = savedir*"configs/config_$(prm.iL[1])_$(prm.iL[2])_b$(prm.beta)_m$(am0)_n$(i)"
         save_gauge(U, gauge_file, prm)
     end
 end
+

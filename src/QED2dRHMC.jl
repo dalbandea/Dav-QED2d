@@ -132,7 +132,7 @@ minimum eigenvalues of D^†D with 1000 iterations of the power method.
 lambda_min, lambda_max = power_method(U, am0)
 ```
 """
-function power_method(U, am0, prm, kprm)
+function power_method(U, am0, prm, kprm; iter::Int64 = 1000)
 
     b = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2) # initial random fermionic field
 
@@ -141,7 +141,7 @@ function power_method(U, am0, prm, kprm)
     # Apply recursively b = Ab.
     # To help convergence, apply instead b = (A + shift) b = Ab + shift b.
     # Then λ_max will be ⟨b|A|b⟩/⟨b|b⟩ - shift.
-    for i in 1:1000
+    for i in 1:iter
         b_aux = copy(b)
         gamm5Dw_sqr(b_aux, U, b, am0, prm, kprm)
         b_aux .= b_aux .+ shift*b
@@ -154,7 +154,7 @@ function power_method(U, am0, prm, kprm)
 
     # Apply recursively b = (A-λ_max I) b = Ab - λ_max b
     # Then λ_min will be ⟨b|A|b⟩/⟨b|b⟩ + λ_max
-    for i in 1:1000
+    for i in 1:iter
         b_last = copy(b)
         gamm5Dw_sqr(b, U, b, am0, prm, kprm)
         b .= b .- lambda_max*b_last
@@ -170,28 +170,29 @@ function power_method(U, am0, prm, kprm)
 end
 
 
+# Returns Z X_in, with Z = D†DR² - I
+function LuscherZ(Z, U, X_in, am0, CGmaxiter, CGtol, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)
+    # Z = D†DR² X_in
+    R(Z, U, X_in, am0, CGmaxiter, CGtol, gamm5Dw_sqr_musq, rprm, prm, kprm)
+    tmp = copy(Z)
+    R(Z, U, tmp, am0, CGmaxiter, CGtol, gamm5Dw_sqr_musq, rprm, prm, kprm)
+    tmp .= Z
+    CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(Z, U, tmp, am0, prm)
+    tmp .= Z
+    CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(Z, U, tmp, am0, prm)
+    # Z = Z - X_in = (D†DR² - I) X_in
+    Z .= Z .- X_in
+    return nothing
+end
 
 # Returns ZᵖX_in, with Z = D†DR² - I
-function LuscherZp(Z, p::Int64, U, X_in, am0, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)
+function LuscherZp(Z, p::Int64, U, X_in, am0, CGmaxiter, CGtol, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)
 
-    function LuscherZ(Z, U, X_in, am0, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)
-        # Z = D†DR² X_in
-        R(Z, U, X_in, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
-        tmp = copy(Z)
-        R(Z, U, tmp, am0, 100000, 0.0000000000000000000001, gamm5Dw_sqr_musq, rprm, prm, kprm)
-        tmp .= Z
-        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(Z, U, tmp, am0, prm)
-        tmp .= Z
-        CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(Z, U, tmp, am0, prm)
-        # Z = Z - X_in = (D†DR² - I) X_in
-        Z .= Z .- X_in
-        return nothing
-    end
 
     tmp = copy(X_in)
     # At the end, Z = (D†DR² - I)ᵖ X_in
     for i in 1:p
-        LuscherZ(Z, U, tmp, am0, rprm, prm, kprm)
+        LuscherZ(Z, U, tmp, am0, CGmaxiter, CGtol, rprm, prm, kprm)
         tmp .= Z
     end
 
@@ -206,7 +207,7 @@ end
 
 Computes the reweighting factor ``W_N`` stochastically using `N` random normal fields up to order `rprm.reweighting_Taylor` in the Taylor expansion of ``(1-Z)^{-1/2}``. If `am0` and `rprm` are lists, returns product of ``W_N`` of all fermions.
 """
-function reweighting_factor(U, am0, prm::LattParm, kprm::KernelParm, rprm::RHMCParm)
+function reweighting_factor(U, am0, CGmaxiter, CGtol, prm::LattParm, kprm::KernelParm, rprm::RHMCParm)
 
     W_N = 0.0
 
@@ -216,10 +217,12 @@ function reweighting_factor(U, am0, prm::LattParm, kprm::KernelParm, rprm::RHMCP
         Tfactor = 1/2   # Taylor factor of expansion (1+Z)^(-1/2)
         X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2)
         ZpX = similar(X)
+        tmp = copy(X)
         for i in 1:rprm.reweighting_Taylor
-            LuscherZp(ZpX,i,U,X,am0,rprm,prm,kprm)  
+            LuscherZ(ZpX, U, tmp, am0, CGmaxiter, CGtol, rprm, prm, kprm)  
             argexp += Tfactor * CUDA.dot(X,ZpX) |> real
             Tfactor *= (-1)*(2*i+1)/2/factorial(i+1)*factorial(i)
+            tmp .= ZpX
         end
         W_N += exp(argexp)/rprm.reweighting_N
     end
@@ -236,11 +239,11 @@ function reweighting_factor(U, am0, prm::LattParm, kprm::KernelParm, rprm::RHMCP
 end
 
 
-function reweighting_factor(U, am0::Array{Float64}, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm})
+function reweighting_factor(U, am0::Array{Float64}, CGmaxiter, CGtol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm})
 
     total_W_N = 1.0 # to return. will contain product of W_N of all fermions
-    for j in length(am0)
-        total_W_N *= reweighting_factor(U, am0[j], prm, kprm, rprm[j])
+    for j in 1:length(am0)
+        total_W_N *= reweighting_factor(U, am0[j], CGmaxiter, CGtol, prm, kprm, rprm[j])
     end
 
     return total_W_N

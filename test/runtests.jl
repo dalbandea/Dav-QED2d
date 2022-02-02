@@ -1,17 +1,20 @@
 using Test
 
-@testset "RHMC" begin
-    println("RHMC pseudofermion force test")
-    include("rhmc_pf_forcetest.jl") 
+@testset verbose = true "RHMC" begin
+    @testset "Pseudofermion generation" begin
+        include("rhmc_pf_generation.jl")
+    end
 
-    println("RHMC pseudofermion generation test")
-    include("rhmc_pf_generation.jl")
+    @testset "Pseudofermion force" begin
+        include("rhmc_pf_forcetest.jl") 
+    end
 
-    println("RHMC reversibility test")
-    include("rhmc_hmc_reversibility.jl")
+    @testset "HMC reversibility" begin
+        include("rhmc_hmc_reversibility.jl")
+    end
 
-    println("RHMC Zolotarev bound test")
-    include("rhmc_zolovarev_bound.jl")
+    @testset "Zolotarev bound" begin
+        include("rhmc_zolovarev_bound.jl")
+    end
 end
-
 
