@@ -4,6 +4,7 @@ authors = ["Alberto Ramos <alberto.ramos@ific.uv.es>"]
 version = "0.1.0"
 
 [deps]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
 CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Elliptic = "b305315f-e792-5b7a-8f41-49f472929428"
