@@ -126,13 +126,14 @@ if continue_from == 0
     io_log = open(savedir*file_log, "w")
     write(io_log, "Start RHMC run in QED2d with beta = $beta; $(lsize[1]) x
           $(lsize[2]); masses = $am0; n_rhmc = $n_rhmc, r_a = $r_a_rhmc, r_b =
-          $r_b_rhmc; ntraj = $ntraj; seed = $seed\n")
+          $r_b_rhmc; ntraj = $ntraj; seed = $seed, nsteps=$nsteps, tau=$tau\n")
     close(io_log)
 else
     io_log = open(savedir*file_log, "a")
     write(io_log, "Continue RHMC run from n=$continue_from with beta = $beta;
           $(lsize[1]) x $(lsize[2]); masses = $am0; n_rhmc = $n_rhmc, r_a =
-          $r_a_rhmc, r_b = $r_b_rhmc; ntraj = $ntraj; seed = $seed\n")
+          $r_a_rhmc, r_b = $r_b_rhmc; ntraj = $ntraj; seed = $seed,
+          nsteps=$nsteps, tau=$tau\n")
     close(io_log)
 end
 
