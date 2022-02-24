@@ -144,11 +144,7 @@ for i in (1 + continue_from):(ntraj + continue_from)
     # println("Last plaquette: $(plaqs[end])")
     # println("Last Q: $(qtops[end])")
     # add reweighting factor
-    if acc[end] == 0
-        push!(reweight, reweight[end])
-    else
-        reweighting_factor(U, am0, CGmaxiter, CGtol, prm, kprm, rprm) |> x -> push!(reweight, x)
-    end
+    reweighting_factor(U, am0, CGmaxiter, CGtol, prm, kprm, rprm) |> x -> push!(reweight, x)
     lambda_min, lambda_max = power_method(U, am0[1], prm, kprm, iter=5000) .|> real
     # println("λ_min = $lambda_min, \nλ_max = $lambda_max")
     
