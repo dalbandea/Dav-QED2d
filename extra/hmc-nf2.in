@@ -1,0 +1,22 @@
+{
+    "Run": {
+	"user": "david",
+	"host": "prox15",
+	"name": "testrhmc_run4", 
+	"seed": 1236
+    },
+    "Lattice": {
+	"size": [20, 20],
+	"beta": 5.0
+    },
+    "HMC": {
+	"tau":      1,
+	"ns":       100,
+    "nthm":     1000,
+    "ntraj":    2000,
+	"Qzero":    false,
+    "mass":     0.2
+    }
+}
+
+

@@ -4,115 +4,302 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+A	src/QED2dRHMC.jl	/^function A(n, eps)$/;"	f
+A_rhmc	tests/rhmc-pfermion-generation.jl	/^A_rhmc = A(n_rhmc,eps_rhmc)$/;"	v
 Action	src/QED2dHMC.jl	/^function Action(U, prm::LattParm, kprm::KernelParm)$/;"	f
 CG	src/QED2dSolver.jl	/^function CG(so, U, si, am0, maxiter, eps, A, prm::LattParm, kprm::KernelParm)$/;"	f
+CG	src/QED2dSolver.jl	/^function CG(so, U, si, am0, mu_mass, maxiter, eps, A, prm::LattParm, kprm::KernelParm; so_as_guess::Bool=false)$/;"	f
 CGmaxiter	main/loadtest.jl	/^CGmaxiter = 10000$/;"	v
-CGtol	main/loadtest.jl	/^CGtol = 0.000000001$/;"	v
-Deps	tests/fermion_forcetest.jl	/^Deps = 0.0001$/;"	v
-Deps	tests/gauge_forcetest.jl	/^Deps = 0.0001$/;"	v
+CGmaxiter	main/rhmc.jl	/^CGmaxiter = 10000$/;"	v
+CGmaxiter	main/rhmctest.jl	/^CGmaxiter = 10000$/;"	v
+CGmaxiter	tests/dev-fermion_forcetest.jl	/^CGmaxiter = 10000$/;"	v
+CGmaxiter	tests/fermion_forcetest.jl	/^CGmaxiter = 10000$/;"	v
+CGmaxiter	tests/rhmc-fermion_forcetest.jl	/^CGmaxiter=10000$/;"	v
+CGtol	main/loadtest.jl	/^CGtol = 1e-16$/;"	v
+CGtol	main/rhmc.jl	/^CGtol = 1e-16$/;"	v
+CGtol	main/rhmctest.jl	/^CGtol = 1e-16$/;"	v
+CGtol	tests/dev-fermion_forcetest.jl	/^CGtol = 0.00000000000000001$/;"	v
+CGtol	tests/fermion_forcetest.jl	/^CGtol = 0.00000000000000001$/;"	v
+CGtol	tests/rhmc-fermion_forcetest.jl	/^CGtol=1e-16$/;"	v
+Deps	tests/dev-fermion_forcetest.jl	/^Deps = 0.0001$/;"	v
+Deps	tests/fermion_forcetest.jl	/^Deps = 0.000001$/;"	v
+Deps	tests/gauge_forcetest.jl	/^Deps = 0.0000001$/;"	v
+Deps	tests/rhmc-fermion_forcetest.jl	/^Deps = 0.000001$/;"	v
+Dw	src/QED2dDirac.jl	/^function Dw(so, U, si, am0::Float64, prm::LattParm, kprm::KernelParm)$/;"	f
 F	main/davtest.jl	/^F = CUDA.zeros(ComplexF64,prm.iL[1], prm.iL[2], 2)$/;"	v
+F	tests/dev-fermion_forcetest.jl	/^F = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
 F	tests/fermion_forcetest.jl	/^F = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
-F	tests/fermion_forcetest.jl	/^F = similar(U)$/;"	v
 F	tests/gauge_forcetest.jl	/^F = similar(U)$/;"	v
-F_h	tests/fermion_forcetest.jl	/^F_h = zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
+F	tests/rhmc-fermion_forcetest.jl	/^F = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
+F	tests/rhmc-pfermion-generation.jl	/^F = Array{CuArray}(undef, n_rhmc)$/;"	v
+F	tests/rhmc-zolotarev-bound.jl	/^F = CUDA.zeros(ComplexF64,prm.iL[1], prm.iL[2], 2)$/;"	v
 F_h	tests/gauge_forcetest.jl	/^F_h = zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
-F_i	tests/fermion_forcetest.jl	/^F_i = F_h[1,10,2]$/;"	v
 F_i	tests/gauge_forcetest.jl	/^F_i = F_h[1,10,2]$/;"	v
+F_num	tests/dev-fermion_forcetest.jl	/^F_num = (Sfin - Sini)\/Deps$/;"	v
 F_num	tests/fermion_forcetest.jl	/^F_num = (Sfin - Sini)\/Deps$/;"	v
 F_num	tests/gauge_forcetest.jl	/^F_num = (Sfin - Sini)\/Deps$/;"	v
+F_num	tests/rhmc-fermion_forcetest.jl	/^F_num = (Sfin - Sini)\/Deps$/;"	v
+Frc	tests/dev-fermion_forcetest.jl	/^Frc = similar(frc)$/;"	v
+Frc	tests/fermion_forcetest.jl	/^Frc = similar(frc)$/;"	v
+Frc	tests/rhmc-fermion_forcetest.jl	/^Frc = similar(frc)$/;"	v
+Frc_i	tests/dev-fermion_forcetest.jl	/^Frc_i = Frc[link_x, link_y, link_dir]$/;"	v
+Frc_i	tests/fermion_forcetest.jl	/^Frc_i = Frc[link_x, link_y, link_dir]$/;"	v
+Frc_i	tests/rhmc-fermion_forcetest.jl	/^Frc_i = Frc[link_x, link_y, link_dir]$/;"	v
 HMC!	src/QED2dHMC.jl	/^function HMC!(U, am0, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm; qzero = false)$/;"	f
+HMC!	src/QED2dHMC.jl	/^function HMC!(U, am0::Array, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm}; qzero = false)$/;"	f
 HMC!	src/QED2dHMC.jl	/^function HMC!(U, eps, ns, acc, prm::LattParm, kprm::KernelParm; qzero = false)$/;"	f
+HMC!	src/QED2dRHMCDeprecated.jl	/^function HMC!(U, am0, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::RHMCParm; qzero = false)$/;"	f
+HMC!	src/QED2dRHMCDeprecated.jl	/^function HMC!(U, am0::Array{Float64}, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm}; qzero = false, so_as_guess=false)$/;"	f
 Hamiltonian	src/QED2dHMC.jl	/^function Hamiltonian(mom, U, prm::LattParm, kprm::KernelParm)$/;"	f
 KernelParm	src/QED2d.jl	/^struct KernelParm$/;"	f
 LattParm	src/QED2d.jl	/^struct LattParm$/;"	f
+LuscherZ	src/QED2dRHMC.jl	/^    function LuscherZ(Z, U, X_in, am0, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)$/;"	f
+LuscherZ	tests/rhmc-zolotarev-bound.jl	/^    function LuscherZ(Z, U, X_in, am0, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)$/;"	f
+LuscherZp	src/QED2dRHMC.jl	/^function LuscherZp(Z, p::Int64, U, X_in, am0, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)$/;"	f
+LuscherZp	tests/rhmc-zolotarev-bound.jl	/^function LuscherZp(Z, p::Int64, U, X_in, am0, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)$/;"	f
+MultiCG	src/QED2dRHMC.jl	/^function MultiCG(so, U, si, am0, maxiter, eps, A, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)$/;"	f
 OMF4!	src/QED2dHMC.jl	/^function OMF4!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::LattParm, kprm::KernelParm)$/;"	f
 OMF4!	src/QED2dHMC.jl	/^function OMF4!(mom, U, eps, ns, prm::LattParm, kprm::KernelParm)$/;"	f
+P	src/QED2dRHMC.jl	/^function P(k, l, n, eps, r_b, Y)            # Lüscher eq. (3.4), not used in code$/;"	f
 Plaquette	src/QED2dHMC.jl	/^function Plaquette(U, prm::LattParm, kprm::KernelParm)$/;"	f
 QED2d	src/QED2d.jl	/^module QED2d$/;"	f
 Qtop	src/QED2dHMC.jl	/^function Qtop(U, prm::LattParm, kprm::KernelParm)$/;"	f
-Sfin	tests/fermion_forcetest.jl	/^Sfin = Action(U2, prm, kprm)$/;"	v
+R	src/QED2dRHMC.jl	/^function R(so, U, si, am0, maxiter, eps, A, rprm::RHMCParm, prm::LattParm, kprm::KernelParm)$/;"	f
+RHMCParm	src/QED2d.jl	/^struct RHMCParm$/;"	f
+Sfin	tests/dev-fermion_forcetest.jl	/^Sfin = CUDA.dot(eta,F) + Action(U2, prm, kprm)$/;"	v
+Sfin	tests/fermion_forcetest.jl	/^Sfin = CUDA.dot(eta,F) + Action(U2, prm, kprm)$/;"	v
 Sfin	tests/gauge_forcetest.jl	/^Sfin = Action(U2, prm, kprm)$/;"	v
+Sfin	tests/rhmc-fermion_forcetest.jl	/^Sfin = CUDA.dot(xi,F)$/;"	v
+Sini	tests/dev-fermion_forcetest.jl	/^Sini = CUDA.dot(X,X) + Action(U, prm, kprm)$/;"	v
 Sini	tests/fermion_forcetest.jl	/^Sini = CUDA.dot(X,X) + Action(U, prm, kprm)$/;"	v
 Sini	tests/gauge_forcetest.jl	/^Sini = Action(U, prm, kprm)$/;"	v
+Sini	tests/rhmc-fermion_forcetest.jl	/^Sini = CUDA.dot(X,X)$/;"	v
+Tfactor	tests/rhmc-zolotarev-bound.jl	/^Tfactor = 1\/2   # Taylor factor of expansion (1+Z)^(-1\/2)$/;"	v
 U	main/MC.jl	/^U   = CUDA.ones(ComplexF64, lsize[1], lsize[2], 2)    $/;"	v
 U	main/davtest.jl	/^U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
 U	main/loadtest.jl	/^U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
 U	main/master_field.jl	/^U   = CUDA.ones(ComplexF64, l1, l2, 2)    $/;"	v
+U	main/rhmc.jl	/^U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
+U	main/rhmctest.jl	/^U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
 U	main/test.jl	/^U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
+U	tests/Dw-eigenvalues.jl	/^U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
+U	tests/dev-fermion_forcetest.jl	/^U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
 U	tests/fermion_forcetest.jl	/^U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
 U	tests/gauge_forcetest.jl	/^U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
+U	tests/rhmc-fermion_forcetest.jl	/^U = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)\/sqrt(2)$/;"	v
+U	tests/rhmc-pfermion-generation.jl	/^U = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)\/sqrt(2)$/;"	v
+U	tests/rhmc-zolotarev-bound.jl	/^U = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)\/sqrt(2)$/;"	v
+U2	tests/dev-fermion_forcetest.jl	/^U2 = similar(U)$/;"	v
 U2	tests/fermion_forcetest.jl	/^U2 = similar(U)$/;"	v
 U2	tests/gauge_forcetest.jl	/^U2 = similar(U)$/;"	v
-U2_h	tests/fermion_forcetest.jl	/^U2_h = ones(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
+U2	tests/rhmc-fermion_forcetest.jl	/^U2 = similar(U)$/;"	v
 U2_h	tests/gauge_forcetest.jl	/^U2_h = ones(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
+W1	tests/rhmc-zolotarev-bound.jl	/^W1 = exp(res)   # if 2Nδ≤0.01, W₁ is expected to deviate from 1 at most by 1%$/;"	v
 X	main/davtest.jl	/^X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)\/sqrt(2)$/;"	v
-X	tests/fermion_forcetest.jl	/^X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)\/sqrt(2)$/;"	v
+X	tests/dev-fermion_forcetest.jl	/^X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2).*(im))\/sqrt(2)$/;"	v
+X	tests/fermion_forcetest.jl	/^X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2).*(im))\/sqrt(2)$/;"	v
+X	tests/rhmc-fermion_forcetest.jl	/^X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2).*(im))\/sqrt(2)$/;"	v
+X	tests/rhmc-zolotarev-bound.jl	/^X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)\/sqrt(2)$/;"	v
+XZpX_code	tests/rhmc-zolotarev-bound.jl	/^XZpX_code = CUDA.dot(X,ZpX) |> real |> abs  # It must hold that (X,ZᵖX) ≤ 2N(2δ)ᵖ$/;"	v
+XZpX_teo	tests/rhmc-zolotarev-bound.jl	/^XZpX_teo = 2*prm.iL[1]*prm.iL[2]*(2*delta_rhmc)^power$/;"	v
+X_f	tests/rhmc-zolotarev-bound.jl	/^X_f = similar(X)$/;"	v
+ZpX	tests/rhmc-zolotarev-bound.jl	/^ZpX = copy(X)$/;"	v
+a_r	src/QED2dRHMC.jl	/^a_r(r, n, eps) = Jacobi.cn(r*v(n,eps), k(eps)^2)^2\/Jacobi.sn(r*v(n,eps), k(eps)^2)^2$/;"	f
 acc	main/MC.jl	/^acc = Vector{Int64}()$/;"	v
 acc	main/loadtest.jl	/^acc = Vector{Int64}()$/;"	v
 acc	main/master_field.jl	/^acc = Vector{Int64}()$/;"	v
+acc	main/rhmc.jl	/^acc = Vector{Int64}()$/;"	v
+acc	main/rhmctest.jl	/^acc = Vector{Int64}()$/;"	v
 acc	main/test.jl	/^acc = Vector{Int64}()$/;"	v
 am0	main/davtest.jl	/^am0 = 0.0$/;"	v
-am0	main/loadtest.jl	/^am0 = 0.01$/;"	v
-am0	tests/fermion_forcetest.jl	/^am0 = 0.01$/;"	v
+am0	main/loadtest.jl	/^am0 = 10.0$/;"	v
+am0	main/rhmctest.jl	/^am0 = [0.2]         # bare mass$/;"	v
+am0	tests/Dw-eigenvalues.jl	/^am0 = 10.0          # bare mass$/;"	v
+am0	tests/dev-fermion_forcetest.jl	/^am0 = 0.01$/;"	v
+am0	tests/fermion_forcetest.jl	/^am0 = 10.0$/;"	v
 am0	tests/gauge_forcetest.jl	/^am0 = 0.01$/;"	v
-eps	main/loadtest.jl	/^eps = 0.001$/;"	v
-eps	main/test.jl	/^eps = 0.005$/;"	v
+am0	tests/rhmc-fermion_forcetest.jl	/^am0 = 10.0          # bare mass$/;"	v
+am0	tests/rhmc-pfermion-generation.jl	/^am0 = 10.0          # bare mass$/;"	v
+am0	tests/rhmc-zolotarev-bound.jl	/^am0 = 10.0          # bare mass$/;"	v
+b	tests/Dw-eigenvalues.jl	/^b = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)\/sqrt(2)$/;"	v
+bnext	tests/Dw-eigenvalues.jl	/^bnext = copy(b)$/;"	v
+c_r	src/QED2dRHMC.jl	/^c_r(r, n, eps) = Jacobi.sn(r*v(n,eps), k(eps)^2)^2$/;"	f
+d	src/QED2dRHMC.jl	/^function d(n, eps)$/;"	f
+delta	src/QED2dRHMC.jl	/^delta(n, eps) = d(n, eps)^2 \/(1+sqrt(1-d(n,eps)^2))^2$/;"	f
+delta_X	tests/rhmc-zolotarev-bound.jl	/^delta_X = sqrt(CUDA.dot(deviation, deviation))\/sqrt(CUDA.dot(X,X))$/;"	v
+delta_rhmc	tests/rhmc-zolotarev-bound.jl	/^delta_rhmc = delta(n_rhmc, rprm.eps) |> (x -> x*(2+x)) # maximum error$/;"	v
+deviation	tests/rhmc-zolotarev-bound.jl	/^deviation = X - X_f$/;"	v
+eps	main/test.jl	/^eps = 0.1$/;"	v
+eps_rhmc	tests/rhmc-pfermion-generation.jl	/^eps_rhmc = ( r_a_rhmc\/r_b_rhmc )^2$/;"	v
+epsilon	main/loadtest.jl	/^epsilon = 1.0\/nsteps$/;"	v
+epsilon	main/rhmc.jl	/^epsilon = tau\/nsteps$/;"	v
+epsilon	main/rhmctest.jl	/^epsilon = 1.0\/nsteps$/;"	v
 err_avg	main/MC.jl	/^function err_avg(dfoo)$/;"	f
 err_avg	main/master_field.jl	/^function err_avg(dfoo)$/;"	f
+error	src/QED2dRHMC.jl	/^function error(Y, Yapprox)$/;"	f
+eta	tests/dev-fermion_forcetest.jl	/^eta = similar(X)$/;"	v
 eta	tests/fermion_forcetest.jl	/^eta = similar(X)$/;"	v
 file	main/loadtest.jl	/^file = "statistics.txt"$/;"	v
+file	tests/dev-fermion_forcetest.jl	/^file = "statistics.txt"$/;"	v
 file	tests/fermion_forcetest.jl	/^file = "statistics.txt"$/;"	v
 file	tests/gauge_forcetest.jl	/^file = "statistics.txt"$/;"	v
+file	tests/rhmc-fermion_forcetest.jl	/^file = "statistics.txt"$/;"	v
+frc	tests/dev-fermion_forcetest.jl	/^frc = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
 frc	tests/fermion_forcetest.jl	/^frc = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
+frc	tests/rhmc-fermion_forcetest.jl	/^frc = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
+frc1	tests/dev-fermion_forcetest.jl	/^frc1 = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
 frc1	tests/fermion_forcetest.jl	/^frc1 = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
 frc1	tests/gauge_forcetest.jl	/^frc1 = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
+frc1	tests/rhmc-fermion_forcetest.jl	/^frc1 = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
+frc2	tests/dev-fermion_forcetest.jl	/^frc2 = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
 frc2	tests/fermion_forcetest.jl	/^frc2 = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
 frc2	tests/gauge_forcetest.jl	/^frc2 = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
+frc2	tests/rhmc-fermion_forcetest.jl	/^frc2 = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
+frc_i	tests/rhmc-fermion_forcetest.jl	/^frc_i = CUDA.zeros(Float64, prm.iL[1], prm.iL[2], 2)$/;"	v
+g5DX	tests/dev-fermion_forcetest.jl	/^g5DX = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
 g5DX	tests/fermion_forcetest.jl	/^g5DX = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
+g5DX	tests/rhmc-fermion_forcetest.jl	/^g5DX = CUDA.zeros(ComplexF64, prm.iL[1], prm.iL[2], 2)$/;"	v
+gamm5	src/QED2dDirac.jl	/^function gamm5(so, si, am0, prm::LattParm)$/;"	f
 gamm5Dw	src/QED2dDirac.jl	/^function gamm5Dw(so, U, si, am0, prm::LattParm)$/;"	f
 gamm5Dw_sqr	src/QED2dDirac.jl	/^function gamm5Dw_sqr(so, U, si, am0::Float64, prm::LattParm, kprm::KernelParm)$/;"	f
 gamm5Dw_sqr_msq	src/QED2dDirac.jl	/^function gamm5Dw_sqr_msq(so, tmp, U, si, am0::Float64, prm::LattParm, kprm::KernelParm)$/;"	f
+gamm5Dw_sqr_musq	src/QED2dDirac.jl	/^function gamm5Dw_sqr_musq(so, tmp, U, si, am0::Float64, mu_j::Float64, prm::LattParm, kprm::KernelParm)$/;"	f
+gamm5Dw_sqr_sqr	src/QED2dDirac.jl	/^function gamm5Dw_sqr_sqr(so, U, si, am0::Float64, prm::LattParm, kprm::KernelParm)$/;"	f
+gamm5Dw_sqr_sqr_musq	src/QED2dDirac.jl	/^function gamm5Dw_sqr_sqr_musq(so, tmp, U, si, am0::Float64, mu_j::Float64, prm::LattParm, kprm::KernelParm)$/;"	f
+generate_pseudofermion!	src/QED2dRHMC.jl	/^function generate_pseudofermion!(F, U, X, am0, CGmaxiter, CGtol, prm, kprm, rprm)$/;"	f
+get_rhmc_params	src/QED2dRHMC.jl	/^function get_rhmc_params(n_rhmc::Array, r_a_rhmc::Array, r_b_rhmc::Array; reweighting_N::Int64=1, reweighting_Taylor::Int64=5)$/;"	f
+get_rhmc_params	src/QED2dRHMC.jl	/^function get_rhmc_params(n_rhmc::Int64, r_a_rhmc, r_b_rhmc; reweighting_N::Int64=1, reweighting_Taylor::Int64=5)$/;"	f
 infile	main/MC.jl	/^infile = parsed_args["i"]$/;"	v
 infile	main/master_field.jl	/^infile = parsed_args["i"]$/;"	v
+infile	main/rhmc.jl	/^infile = parsed_args["i"]$/;"	v
 io	main/test.jl	/^io = open("log.txt", "w+")$/;"	v
+k	src/QED2dRHMC.jl	/^k(eps) = sqrt(1.0-eps)$/;"	f
+k_1	tests/Dw-eigenvalues.jl	/^k_1 = 2*pi*5\/20$/;"	v
+k_2	tests/Dw-eigenvalues.jl	/^k_2 = 2*pi*5\/20$/;"	v
 kprm	main/davtest.jl	/^kprm = KernelParm((50, 1), (1,50))$/;"	v
-kprm	main/loadtest.jl	/^kprm = KernelParm((50, 1), (1,50))$/;"	v
+kprm	main/loadtest.jl	/^kprm = KernelParm((40, 1), (1,40))$/;"	v
 kprm	main/test.jl	/^kprm = KernelParm((90, 1), (1,90))$/;"	v
-kprm	tests/fermion_forcetest.jl	/^kprm = KernelParm((50, 1), (1,50))$/;"	v
+kprm	tests/dev-fermion_forcetest.jl	/^kprm = KernelParm((50, 1), (1,50))$/;"	v
+kprm	tests/fermion_forcetest.jl	/^kprm = KernelParm((10, 1), (1,10))$/;"	v
 kprm	tests/gauge_forcetest.jl	/^kprm = KernelParm((50, 1), (1,50))$/;"	v
 krnl_force!	src/QED2dAction.jl	/^function krnl_force!(frc1, frc2, U, prm::LattParm)$/;"	f
 krnl_reflect!	src/QED2dFields.jl	/^function krnl_reflect!(Uout, Uin, l1old, l2old)$/;"	f
 krnl_unfold!	src/QED2dFields.jl	/^function krnl_unfold!(Uout, Uin, l1old, l2old)$/;"	f
+lambda	tests/Dw-eigenvalues.jl	/^lambda = CUDA.dot(b,bnext)\/CUDA.dot(b,b)    # check eigenvalue λ of b$/;"	v
+lambda_1	tests/Dw-eigenvalues.jl	/^lambda_1 = am0 + 2*( sin(k_1\/2)^2 + sin(k_2\/2)^2 ) + im*sqrt( sin(k_1)^2 + sin(k_2)^2 )$/;"	v
+lambda_2	tests/Dw-eigenvalues.jl	/^lambda_2 = am0 + 2*( sin(k_1\/2)^2 + sin(k_2\/2)^2 ) - im*sqrt( sin(k_1)^2 + sin(k_2)^2 )$/;"	v
+lbeta	main/rhmctest.jl	/^lbeta = 5.00        # beta$/;"	v
+lbeta	tests/Dw-eigenvalues.jl	/^lbeta = 6.05        # beta$/;"	v
+lbeta	tests/rhmc-fermion_forcetest.jl	/^lbeta = 6.05        # beta$/;"	v
+lbeta	tests/rhmc-pfermion-generation.jl	/^lbeta = 6.05        # beta$/;"	v
+lbeta	tests/rhmc-zolotarev-bound.jl	/^lbeta = 5.00        # beta$/;"	v
 leapfrog!	src/QED2dHMC.jl	/^function leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm)$/;"	f
+leapfrog!	src/QED2dHMC.jl	/^function leapfrog!(mom, U, X, F, g5DX, am0::Array, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm})$/;"	f
+leapfrog!	src/QED2dRHMCDeprecated.jl	/^function leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::RHMCParm)$/;"	f
+leapfrog!	src/QED2dRHMCDeprecated.jl	/^function leapfrog!(mom, U, X, F, g5DX, am0::Array{Float64}, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm}; so_as_guess::Bool=false)$/;"	f
+link_dir	tests/dev-fermion_forcetest.jl	/^link_dir = 1 # direction of link$/;"	v
+link_dir	tests/fermion_forcetest.jl	/^link_dir = 2 # direction of link$/;"	v
+link_dir	tests/rhmc-fermion_forcetest.jl	/^link_dir = 1 # direction of link$/;"	v
+link_x	tests/dev-fermion_forcetest.jl	/^link_x = 2  # position x of link$/;"	v
+link_x	tests/fermion_forcetest.jl	/^link_x = 8  # position x of link$/;"	v
+link_x	tests/rhmc-fermion_forcetest.jl	/^link_x = 2  # position x of link$/;"	v
+link_y	tests/dev-fermion_forcetest.jl	/^link_y = 10 # position y of link$/;"	v
+link_y	tests/fermion_forcetest.jl	/^link_y = 4 # position y of link$/;"	v
+link_y	tests/rhmc-fermion_forcetest.jl	/^link_y = 5 # position y of link$/;"	v
 load_gauge	src/QED2dLoadSave.jl	/^function load_gauge(U, file::String, prm::LattParm)$/;"	f
+lsize	main/rhmctest.jl	/^lsize = 20          # lattice size$/;"	v
+lsize	tests/Dw-eigenvalues.jl	/^lsize = 20          # lattice size$/;"	v
+lsize	tests/rhmc-fermion_forcetest.jl	/^lsize = 10          # lattice size$/;"	v
+lsize	tests/rhmc-pfermion-generation.jl	/^lsize = 20          # lattice size$/;"	v
+lsize	tests/rhmc-zolotarev-bound.jl	/^lsize = 40          # lattice size$/;"	v
 mom	main/test.jl	/^mom = CUDA.zeros(Float64,  prm.iL[1], prm.iL[2], 2)$/;"	v
-ns	main/loadtest.jl	/^ns  = 100$/;"	v
-ns	main/test.jl	/^ns  = 100$/;"	v
+mu	src/QED2dRHMC.jl	/^mu(j, n, eps, r_b) = r_b * a_r(2*j, n, eps)^(1\/2)$/;"	f
+mu_rhmc	tests/rhmc-pfermion-generation.jl	/^mu_rhmc = Array{Float64}(undef, n_rhmc)$/;"	v
+n_rhmc	main/rhmctest.jl	/^n_rhmc = 5                                              # number of Zolotarev$/;"	v
+n_rhmc	tests/rhmc-fermion_forcetest.jl	/^n_rhmc = 2          # number of Zolotarev monomial pairs$/;"	v
+n_rhmc	tests/rhmc-fermion_forcetest.jl	/^n_rhmc = 5                                              # number of Zolotarev$/;"	v
+n_rhmc	tests/rhmc-pfermion-generation.jl	/^n_rhmc = 5          # number of Zolotarev monomial pairs$/;"	v
+n_rhmc	tests/rhmc-zolotarev-bound.jl	/^n_rhmc = 5          # number of Zolotarev monomial pairs$/;"	v
+ns	main/test.jl	/^ns  = 10$/;"	v
+nsteps	main/loadtest.jl	/^nsteps  = 100$/;"	v
+nsteps	main/rhmctest.jl	/^nsteps  = 100$/;"	v
+nu	src/QED2dRHMC.jl	/^nu(j, n, eps, r_b) = r_b * a_r(2*j-1, n, eps)^(1\/2)$/;"	f
+nu_rhmc	tests/rhmc-pfermion-generation.jl	/^nu_rhmc = Array{Float64}(undef, n_rhmc)$/;"	v
 parse_commandline	main/MC.jl	/^function parse_commandline()$/;"	f
 parse_commandline	main/master_field.jl	/^function parse_commandline()$/;"	f
+parse_commandline	main/rhmc.jl	/^function parse_commandline()$/;"	f
 parsed_args	main/MC.jl	/^parsed_args = parse_commandline()$/;"	v
 parsed_args	main/master_field.jl	/^parsed_args = parse_commandline()$/;"	v
+parsed_args	main/rhmc.jl	/^parsed_args = parse_commandline()$/;"	v
 pl	main/MC.jl	/^pl  = Vector{Float64}(undef, nt)$/;"	v
+plaqs	main/loadtest.jl	/^plaqs = Vector{Float64}()$/;"	v
+plaqs	main/rhmc.jl	/^plaqs = Vector{Float64}()$/;"	v
+plaqs	main/rhmctest.jl	/^plaqs = Vector{Float64}()$/;"	v
 plaquette!	src/QED2dAction.jl	/^function plaquette!(plx, U, prm::LattParm)$/;"	f
+plwv	src/QED2dUtils.jl	/^function plwv(so, k::Tuple{Float64, Float64}, prm::LattParm)$/;"	f
+power	tests/rhmc-zolotarev-bound.jl	/^power = 3$/;"	v
+power_method	src/QED2dRHMC.jl	/^function power_method(U, am0, prm, kprm)$/;"	f
+power_method	tests/rhmc-pfermion-generation.jl	/^function power_method(U, am0)$/;"	f
 prm	main/davtest.jl	/^prm  = LattParm((50,50), 5.0)$/;"	v
-prm	main/loadtest.jl	/^prm  = LattParm((50,50), 6.05)$/;"	v
+prm	main/loadtest.jl	/^prm  = LattParm((40,40), 5.0)$/;"	v
 prm	main/test.jl	/^prm  = LattParm((90,90), 1.0)$/;"	v
-prm	tests/fermion_forcetest.jl	/^prm  = LattParm((50,50), 6.05)$/;"	v
+prm	tests/dev-fermion_forcetest.jl	/^prm  = LattParm((50,50), 5.0)$/;"	v
+prm	tests/fermion_forcetest.jl	/^prm  = LattParm((10,10), 6.05)$/;"	v
 prm	tests/gauge_forcetest.jl	/^prm  = LattParm((50,50), 6.05)$/;"	v
+prod_in	tests/rhmc-pfermion-generation.jl	/^prod_in = 0.0       # X†X$/;"	v
+prod_out	tests/rhmc-pfermion-generation.jl	/^prod_out = 0.0      # ξ†ϕᵢ$/;"	v
 qt	main/MC.jl	/^qt  = Vector{Float64}(undef, nt)$/;"	v
 qtop!	src/QED2dAction.jl	/^function qtop!(plx, U, prm::LattParm)$/;"	f
-read_from	main/loadtest.jl	/^read_from = 193$/;"	v
-read_from	tests/fermion_forcetest.jl	/^read_from = 193$/;"	v
+qtops	main/rhmc.jl	/^qtops = Vector{Float64}()$/;"	v
+qtops	main/rhmctest.jl	/^qtops = Vector{Float64}()$/;"	v
+r_a_rhmc	main/rhmctest.jl	/^r_a_rhmc = 0.06 |> real |> x->x*1.0 |> sqrt  $/;"	v
+r_a_rhmc	tests/rhmc-fermion_forcetest.jl	/^r_a_rhmc = lambda_min |> real |> x->x*1.0 |> sqrt  $/;"	v
+r_a_rhmc	tests/rhmc-pfermion-generation.jl	/^r_a_rhmc = lambda_min |> real |> x->round(x)-1 |> sqrt  $/;"	v
+r_a_rhmc	tests/rhmc-zolotarev-bound.jl	/^r_a_rhmc = lambda_min |> real |> x->0.8*x |> sqrt  $/;"	v
+r_b_rhmc	main/rhmctest.jl	/^r_b_rhmc = 20.0 |> real |> x->x*1.0 |> sqrt             # eps_rhmc is defined$/;"	v
+r_b_rhmc	tests/rhmc-fermion_forcetest.jl	/^r_b_rhmc = lambda_max |> real |> x->x*1.0 |> sqrt       # eps_rhmc is defined$/;"	v
+r_b_rhmc	tests/rhmc-pfermion-generation.jl	/^r_b_rhmc = lambda_max |> real |> x->round(x)+1 |> sqrt  # eps_rhmc is defined$/;"	v
+r_b_rhmc	tests/rhmc-zolotarev-bound.jl	/^r_b_rhmc = lambda_max |> real |> x->1.2*x |> sqrt       # eps_rhmc is defined$/;"	v
+read_from	main/loadtest.jl	/^read_from = 0$/;"	v
+read_from	main/rhmctest.jl	/^read_from = 0$/;"	v
+read_from	tests/dev-fermion_forcetest.jl	/^read_from = 0$/;"	v
+read_from	tests/fermion_forcetest.jl	/^read_from = 93$/;"	v
 read_from	tests/gauge_forcetest.jl	/^read_from = 193$/;"	v
+read_from	tests/rhmc-fermion_forcetest.jl	/^read_from = 93$/;"	v
 read_options	main/MC.jl	/^function read_options(fname)$/;"	f
 read_options	main/master_field.jl	/^function read_options(fname)$/;"	f
+read_options	main/rhmc.jl	/^function read_options(fname)$/;"	f
+res	tests/rhmc-zolotarev-bound.jl	/^res = 0.0$/;"	v
+resres	tests/Dw-eigenvalues.jl	/^resres = bnext\/lambda - b                   # shouled be 0 if b is eigenvector$/;"	v
+reweight	main/rhmc.jl	/^reweight = Vector{Float64}()$/;"	v
+reweight	main/rhmctest.jl	/^reweight = Vector{Float64}()$/;"	v
+reweighting_factor	src/QED2dRHMC.jl	/^function reweighting_factor(U, am0, prm::LattParm, kprm::KernelParm, rprm::RHMCParm)$/;"	f
+reweighting_factor	src/QED2dRHMC.jl	/^function reweighting_factor(U, am0::Array{Float64}, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm})$/;"	f
+rho_mu	src/QED2dRHMC.jl	/^function rho_mu(j, k, l, n, eps, r_b)       # Lüscher eq. (3.5)$/;"	f
+rho_nu	src/QED2dRHMC.jl	/^function rho_nu(j, k, l, n, eps, r_b)       # Lüscher eq. (3.9)$/;"	f
+rho_rhmc	tests/rhmc-pfermion-generation.jl	/^rho_rhmc = Array{Float64}(undef, n_rhmc)$/;"	v
+rprm	main/rhmc.jl	/^rprm = get_rhmc_params(n_rhmc, r_a_rhmc, r_b_rhmc)$/;"	v
+rprm	main/rhmctest.jl	/^rprm = get_rhmc_params([n_rhmc], [r_a_rhmc], [r_b_rhmc])$/;"	v
+rprm	tests/rhmc-fermion_forcetest.jl	/^rprm = get_rhmc_params(n_rhmc, r_a_rhmc, r_b_rhmc)$/;"	v
+rprm	tests/rhmc-pfermion-generation.jl	/^rprm = RHMCParm(r_b_rhmc, n_rhmc, eps_rhmc, A_rhmc, rho_rhmc, mu_rhmc, nu_rhmc)$/;"	v
+rprm	tests/rhmc-zolotarev-bound.jl	/^rprm = get_rhmc_params(n_rhmc, r_a_rhmc, r_b_rhmc)$/;"	v
 save_gauge	src/QED2dLoadSave.jl	/^function save_gauge(U, file::String, prm::LattParm)$/;"	f
 save_msm	main/master_field.jl	/^function save_msm(fb, U, prm, kprm)$/;"	f
 set_kernel_parameters	main/MC.jl	/^function set_kernel_parameters(l1, l2)$/;"	f
 set_kernel_parameters	main/master_field.jl	/^function set_kernel_parameters(l1, l2)$/;"	f
 threads	main/davtest.jl	/^CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F, U, X, am0, prm)$/;"	v
+threads	tests/Dw-eigenvalues.jl	/^CUDA.@cuda threads=kprm.threads blocks=kprm.blocks plwv(b, (k_1, k_2), prm)$/;"	v
+threads	tests/rhmc-zolotarev-bound.jl	/^CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(X_f, U, F, am0, prm)$/;"	v
+threads	tests/rhmc-zolotarev-bound.jl	/^CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(X_f, U, tmp2, am0, prm)$/;"	v
+tmp	tests/rhmc-zolotarev-bound.jl	/^tmp = copy(F)$/;"	v
+tmp2	tests/rhmc-zolotarev-bound.jl	/^tmp2 = copy(X_f)$/;"	v
 tr_dQwdU	src/QED2dDirac.jl	/^function tr_dQwdU(frc, U, X, g5DwX, prm::LattParm)$/;"	f
 unfold_fld!	src/QED2dFields.jl	/^function unfold_fld!(Uin, prm::LattParm, kprm::KernelParm)$/;"	f
 unfold_reflect!	src/QED2dFields.jl	/^function unfold_reflect!(Uin, prm::LattParm, kprm::KernelParm)$/;"	f
 update_momenta!	src/QED2dHMC.jl	/^function update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::LattParm, kprm::KernelParm)$/;"	f
+update_momenta!	src/QED2dHMC.jl	/^function update_momenta!(mom, U, X, F, g5DX, am0::Array, eps, ns, maxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm})$/;"	f
+update_momenta!	src/QED2dRHMCDeprecated.jl	/^function update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm}; so_as_guess::Bool=false)$/;"	f
+update_momenta!	src/QED2dRHMCDeprecated.jl	/^function update_momenta!(mom, U, X, F, g5DX, am0, eps, ns, maxiter, tol, prm::LattParm, kprm::KernelParm, rprm::RHMCParm)$/;"	f
 updt_fld!	src/QED2dAction.jl	/^function updt_fld!(U, mom, eps)$/;"	f
+v	src/QED2dRHMC.jl	/^v(n, eps) = Elliptic.K(k(eps)^2)\/(2.0*n+1.0)$/;"	f
+xi	tests/rhmc-fermion_forcetest.jl	/^xi = copy(F)$/;"	v
