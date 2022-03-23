@@ -26,6 +26,9 @@ struct RHMCParm
 end
 export LattParm, KernelParm, RHMCParm
 
+include("integrators/integrators.jl")
+export Integrators, Leapfrog, OMF4
+
 include("QED2dAction.jl")
 export plaquette!, qtop!, updt_fld!, krnl_force!
 

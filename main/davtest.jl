@@ -4,22 +4,27 @@ using Pkg
 Pkg.activate(".")
 using QED2d
 
-prm  = LattParm((50,50), 5.0)
-kprm = KernelParm((50, 1), (1,50))
-am0 = 0.0
+# Lattice and Zolotarev parameters
+lsize = 20          # lattice size
+lbeta = 2.00        # beta
+am0 = 0.6         # bare mass
 
-X = (CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2) .+ CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)im)/sqrt(2)
-println(CUDA.dot(X,X))
-F = CUDA.zeros(ComplexF64,prm.iL[1], prm.iL[2], 2)
+prm  = LattParm((lsize,lsize), lbeta)
+kprm = KernelParm((lsize, 1), (1,lsize))
+
 U = CUDA.ones(ComplexF64, prm.iL[1], prm.iL[2], 2)
 
-CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F, U, X, am0, prm)
+acc = Vector{Int64}()
+nsteps  = 10
+epsilon = 1.0/nsteps
+CGmaxiter = 10000
+CGtol = 1e-16
 
-CG(X, U, F, am0, 100000, 0.000000000000000000000001, gamm5Dw_sqr_msq, prm, kprm)
-println(CUDA.dot(X,F))
+@time HMC!(U, am0, epsilon, nsteps, acc, CGmaxiter, CGtol, prm, kprm, integrator = Leapfrog())
 
 # for i in 1:1000
 #        @time HMC!(U, 0.0, 0.0005, 20, Vector{Int64}(), 10000, prm, kprm, qzero=false)
 #            println("   Plaquette: ", Plaquette(U, prm, kprm))
 #            println("   Qtop:      ", Qtop(U, prm, kprm))
 # end
+

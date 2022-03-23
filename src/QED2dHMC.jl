@@ -1,6 +1,23 @@
+# Molecular Dynamics for pure gauge theory
+MD!(integrator::OMF4, mom, U, eps, ns, 
+    prm::LattParm, kprm::KernelParm) = OMF4!(mom, U, eps, ns, prm, kprm)
+# Molecular Dynamics for Nf=2 degenerate fermions
+MD!(integrator::Leapfrog, mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol,
+    prm::LattParm, kprm::KernelParm) = leapfrog!(mom, U, X, F, g5DX, am0, eps,
+                                                 ns, CGmaxiter, tol, prm, kprm)
+MD!(integrator::OMF4, mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol,
+    prm::LattParm, kprm::KernelParm) = OMF4!(mom, U, X, F, g5DX, am0,  eps, ns,
+                                             CGmaxiter, tol, prm::LattParm,
+                                             kprm::KernelParm)
+# Molecular Dynamics for RHMC
+MD!(integrator::Leapfrog, mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol,
+    prm::LattParm, kprm::KernelParm, rprm) = leapfrog!(mom, U, X, F, g5DX, am0,
+                                                       eps, ns, CGmaxiter, tol,
+                                                       prm, kprm, rprm)
 
 # HMC step for pure gauge
-function HMC!(U, eps, ns, acc, prm::LattParm, kprm::KernelParm; qzero = false)
+function HMC!(U, eps, ns, acc, prm::LattParm, kprm::KernelParm;
+        integrator::Integrators = OMF4(), qzero = false)
 
     Ucp = similar(U)
     Ucp .= U
@@ -8,7 +25,7 @@ function HMC!(U, eps, ns, acc, prm::LattParm, kprm::KernelParm; qzero = false)
     mom = CUDA.randn(Float64, prm.iL[1], prm.iL[2], 2)
     hini = Hamiltonian(mom, U, prm, kprm)
 
-    OMF4!(mom, U, eps, ns, prm::LattParm, kprm::KernelParm)
+    MD!(integrator, mom, U, eps, ns, prm::LattParm, kprm::KernelParm)
     
     hfin = Hamiltonian(mom, U, prm, kprm)
     if qzero
@@ -44,7 +61,7 @@ end
 
 
 # HMC step for Nf=2 degenerate fermions
-function HMC!(U, am0, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm; qzero = false)
+function HMC!(U, am0, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm; integrator::Integrators = Leapfrog(), qzero = false)
 
     Ucp = similar(U)
     Ucp .= U
@@ -60,9 +77,7 @@ function HMC!(U, am0, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelP
 	    CUDA.@cuda threads=kprm.threads blocks=kprm.blocks gamm5Dw(F, U, X, am0, prm)
     end
 
-    # OMF4!(mom, U, X, F, g5DX, am0,  eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm)
-    leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm)
-    
+    MD!(integrator, mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm)
     
     hfin = real(Hamiltonian(mom, U, prm, kprm) + CUDA.dot(X,F))
 
@@ -97,8 +112,10 @@ function HMC!(U, am0, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelP
     return nothing
 end
 
-# RHMC with 1 pseudofermion field for fermion
-function HMC!(U, am0::Array, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::Array{RHMCParm}; qzero = false, reversibility_test = false)
+# RHMC with 1 pseudofermion field per fermion
+function HMC!(U, am0::Array, eps, ns, acc, CGmaxiter, tol, prm::LattParm,
+        kprm::KernelParm, rprm::Array{RHMCParm}; integrator::Integrators =
+        Leapfrog(), qzero = false, reversibility_test = false)
 
     Ucp = similar(U)
     Ucp .= U
@@ -126,8 +143,7 @@ function HMC!(U, am0::Array, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::
         generate_pseudofermion!(F[j], U, X, am0[j], CGmaxiter, tol, prm, kprm, rprm[j])
     end
 
-    # OMF4!(mom, U, X, F, g5DX, am0,  eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm::RHMCParm)
-    leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm)
+    MD!(integrator, mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm)
     
     # Initialize final Hamiltonian and complete it with pseudofermion
     # contributions
@@ -142,7 +158,7 @@ function HMC!(U, am0::Array, eps, ns, acc, CGmaxiter, tol, prm::LattParm, kprm::
 
     if reversibility_test
         mom .= -mom
-        leapfrog!(mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm)
+        MD!(integrator, mom, U, X, F, g5DX, am0, eps, ns, CGmaxiter, tol, prm::LattParm, kprm::KernelParm, rprm)
 
         return nothing
     end
